@@ -1,4 +1,7 @@
-// assets/js/admin.js (VERSI FINAL - Deteksi Header Lebih Pintar)
+// ============================================================
+// MUSEUM BAHARI ENDE - NGera Shells
+// File: admin.js (VERSI FINAL - Tanpa Error)
+// ============================================================
 
 const SHEET_ID = '14Yjote6VXC0LB65Sd_ZcgXdUE0kVexQFNhO_lbGhYVs';
 const SHEET_KODE = 'Kode';
@@ -6,7 +9,7 @@ const SHEET_STATISTIK = 'Statistik';
 const SHEET_ADMIN = 'Admin';
 
 // ============================================================
-// FUNGSI UTILITAS
+// FUNGSI UTILITAS: SHA-256 Hash
 // ============================================================
 async function sha256(message) {
     const msgBuffer = new TextEncoder().encode(message);
@@ -15,6 +18,9 @@ async function sha256(message) {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// ============================================================
+// FUNGSI UTILITAS: Baca Google Sheet
+// ============================================================
 async function readSheet(sheetName) {
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
     try {
@@ -31,6 +37,9 @@ async function readSheet(sheetName) {
     }
 }
 
+// ============================================================
+// FUNGSI UTILITAS: Parse Timestamp
+// ============================================================
 function parseTimestamp(cell) {
     if (!cell || !cell.v) return null;
     try {
@@ -50,38 +59,21 @@ function parseTimestamp(cell) {
 }
 
 // ============================================================
-// FUNGSI BARU: Deteksi apakah sebuah baris adalah HEADER
+// FUNGSI: Deteksi Header (VERSI FINAL - Akurat & Aman)
 // ============================================================
 function isHeaderRow(cells) {
     if (!cells || !cells[0] || !cells[0].v) return false;
     
     const firstCell = cells[0].v.toString().trim().toUpperCase();
     
-    // Cek 1: Apakah berisi kata "KODE" (case-insensitive)
-    if (firstCell === 'KODE' || firstCell === 'CODE') {
-        return true;
-    }
+    // HANYA deteksi kata kunci header yang eksplisit
+    const headerKeywords = ['KODE', 'CODE', 'NAMA', 'NO', 'NO.', 'NOMOR', 'ID', 'KEY', 'USERNAME', 'TIMESTAMP'];
     
-    // Cek 2: Apakah berisi kata-kata yang umum di header
-    const headerKeywords = ['KODE', 'CODE', 'NAMA', 'NO', 'NO.', 'NOMOR', 'ID'];
-    if (headerKeywords.includes(firstCell)) {
-        return true;
-    }
-    
-    // Cek 3: Jika sel pertama terlihat seperti label (bukan kode akses)
-    // Kode akses biasanya: MBE-XXXX-XXXX, DEWASA10, atau alfanumerik panjang
-    // Header biasanya: kata tunggal pendek seperti "Kode", "Nama", dll
-    const isLikelyCode = /^[A-Z0-9]{4,}(-[A-Z0-9]+)*$/i.test(firstCell);
-    if (!isLikelyCode && firstCell.length < 15) {
-        // Jika bukan format kode DAN pendek, kemungkinan header
-        return true;
-    }
-    
-    return false;
+    return headerKeywords.includes(firstCell);
 }
 
 // ============================================================
-// HALAMAN LOGIN
+// HALAMAN LOGIN (admin.html)
 // ============================================================
 const loginForm = document.getElementById('loginForm');
 if (loginForm) {
@@ -129,7 +121,7 @@ if (loginForm) {
 }
 
 // ============================================================
-// HALAMAN DASHBOARD
+// HALAMAN DASHBOARD (dashboard.html)
 // ============================================================
 if (document.getElementById('statToday')) {
     if (localStorage.getItem('admin_logged_in') !== 'true') {
@@ -155,14 +147,14 @@ async function loadDashboard() {
 }
 
 // ============================================================
-// HITUNG STATISTIK AKSES
+// FUNGSI: HITUNG STATISTIK AKSES
 // ============================================================
 function calculateStats(data) {
     const elToday = document.getElementById('statToday');
     const elWeek = document.getElementById('statWeek');
     const elMonth = document.getElementById('statMonth');
     
-    if (!data || !data.table || !data.table.rows || data.table.rows.length <= 1) {
+    if (!data || !data.table || !data.table.rows || data.table.rows.length === 0) {
         elToday.textContent = '0';
         elWeek.textContent = '0';
         elMonth.textContent = '0';
@@ -176,7 +168,8 @@ function calculateStats(data) {
     let todayCount = 0, weekCount = 0, monthCount = 0;
     
     data.table.rows.forEach((row, index) => {
-        if (index === 0) return; // Skip header
+        if (index === 0 && isHeaderRow(row.c)) return; // Skip header
+        
         const cells = row.c;
         if (!cells || !cells[0]) return;
         
@@ -197,12 +190,12 @@ function calculateStats(data) {
 }
 
 // ============================================================
-// RENDER GRAFIK
+// FUNGSI: RENDER GRAFIK 7 HARI
 // ============================================================
 function renderChart(data) {
     const container = document.getElementById('chartContainer');
     
-    if (!data || !data.table || !data.table.rows || data.table.rows.length <= 1) {
+    if (!data || !data.table || !data.table.rows || data.table.rows.length === 0) {
         container.innerHTML = `
             <div class="loading">
                 <i class="fa fa-info-circle" style="color: #ffc107;"></i><br>
@@ -225,7 +218,7 @@ function renderChart(data) {
     }
     
     data.table.rows.forEach((row, index) => {
-        if (index === 0) return;
+        if (index === 0 && isHeaderRow(row.c)) return;
         const cells = row.c;
         if (!cells || !cells[0]) return;
         
@@ -254,7 +247,7 @@ function renderChart(data) {
 }
 
 // ============================================================
-// RENDER TABEL KODE (VERSI FINAL - DETEKSI HEADER PINTAR)
+// FUNGSI: RENDER TABEL KODE (VERSI FINAL)
 // ============================================================
 async function renderCodesTable(data) {
     const container = document.getElementById('codesTable');
@@ -294,9 +287,7 @@ async function renderCodesTable(data) {
     let nomor = 1;
     let startIndex = 0;
     
-    // ============================================================
-    // DETEKSI HEADER DENGAN FUNGSI PINTAR
-    // ============================================================
+    // Deteksi header dengan fungsi yang akurat
     if (data.table.rows.length > 0) {
         const firstRow = data.table.rows[0];
         if (isHeaderRow(firstRow.c)) {
@@ -305,20 +296,16 @@ async function renderCodesTable(data) {
             startIndex = 1;
             console.log(`✅ HEADER TERDETEKSI: "${headerContent}" → akan di-skip`);
         } else {
-            console.log(`⚠️ Baris pertama TIDAK terdeteksi sebagai header. Isi: "${firstRow.c[0]?.v}"`);
-            console.log(`💡 Jika baris pertama adalah header, pastikan berisi kata "Kode" atau "KODE"`);
+            console.log(`ℹ️ Tidak ada header. Semua baris dianggap sebagai data kode.`);
         }
     }
     
-    // ============================================================
-    // PROSES SEMUA BARIS (SKIP HEADER)
-    // ============================================================
+    // Proses semua baris
     data.table.rows.forEach((row, index) => {
-        if (index < startIndex) return; // Skip header
+        if (index < startIndex) return;
         
         const cells = row.c;
         
-        // Abaikan baris yang benar-benar kosong
         if (!cells || cells.every(c => !c || !c.v || c.v.toString().trim() === '')) {
             barisKosong++;
             return;
@@ -335,7 +322,6 @@ async function renderCodesTable(data) {
         const durasi = cells[2]?.v || 60;
         const status = cells[5]?.v?.toString().trim().toLowerCase() || '';
         
-        // Klasifikasi status
         if (status === 'aktif') {
             kodeAktif++;
             kodeAktifList.push(kode);
@@ -343,7 +329,6 @@ async function renderCodesTable(data) {
             kodeNonaktif++;
             kodeNonaktifList.push(kode);
         } else {
-            // Tidak ada status → dianggap aktif
             kodeTanpaStatus++;
             kodeAktif++;
             kodeAktifList.push(kode);
@@ -377,58 +362,43 @@ async function renderCodesTable(data) {
     
     html += '</tbody></table>';
     
-    // ============================================================
-    // RINGKASAN STATISTIK TRANSPARAN
-    // ============================================================
+    // Ringkasan statistik
     const summaryHtml = `
         <div style="background: #f8f9fa; border-left: 4px solid #b8860b; padding: 15px; margin-bottom: 20px; border-radius: 6px; font-size: 0.9em;">
             <strong style="color: #0a192f;"><i class="fa fa-info-circle"></i> Ringkasan Data dari Google Sheet:</strong>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 10px;">
                 <div>📊 Total baris di Sheet: <strong>${totalRows}</strong></div>
-                <div>✅ Header terdeteksi: <strong>${headerSkipped ? 'Ya ("' + (headerContent || '') + '")' : 'Tidak ⚠️'}</strong></div>
+                <div>✅ Header: <strong>${headerSkipped ? 'Ada ("' + headerContent + '")' : 'Tidak ada'}</strong></div>
                 <div>📝 Total kode valid: <strong>${totalKodes}</strong></div>
                 <div>🟢 Kode Aktif: <strong style="color: #10b981;">${kodeAktif}</strong></div>
                 <div>🔴 Kode Nonaktif: <strong style="color: #ef4444;">${kodeNonaktif}</strong></div>
                 <div>⚪ Tanpa status: <strong style="color: #6c757d;">${kodeTanpaStatus}</strong></div>
-                <div>⚠️ Baris kosong: <strong>${barisKosong}</strong></div>
             </div>
-            ${!headerSkipped ? `
-                <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-left: 3px solid #ffc107; border-radius: 4px; font-size: 0.9em;">
-                    <strong>⚠️ Perhatian:</strong> Header tidak terdeteksi. Pastikan baris pertama di Google Sheet Anda berisi kata <strong>"Kode"</strong> atau <strong>"KODE"</strong> di kolom A.
-                </div>
-            ` : ''}
-            ${kodeTanpaStatus > 0 ? `
-                <div style="margin-top: 10px; padding: 10px; background: #e7f3ff; border-left: 3px solid #2196f3; border-radius: 4px; font-size: 0.9em;">
-                    <strong>💡 Info:</strong> Ada ${kodeTanpaStatus} kode tanpa status yang otomatis dianggap aktif. Isi kolom Status (F) dengan "aktif" atau "nonaktif" untuk kontrol yang lebih baik.
-                </div>
-            ` : ''}
         </div>
     `;
     
     container.innerHTML = summaryHtml + html;
     elStatCodes.textContent = kodeAktif;
     
-    // Log detail
     console.log("=".repeat(60));
     console.log("📊 RINGKASAN STATISTIK KODE:");
     console.log(`   Total baris di Sheet: ${totalRows}`);
-    console.log(`   Header terdeteksi: ${headerSkipped} ${headerContent ? '("' + headerContent + '")' : ''}`);
+    console.log(`   Header: ${headerSkipped ? 'Ada ("' + headerContent + '")' : 'Tidak ada'}`);
     console.log(`   Total kode valid: ${totalKodes}`);
     console.log(`   ✅ Kode Aktif: ${kodeAktif}`);
     console.log(`   ❌ Kode Nonaktif: ${kodeNonaktif}`);
     console.log(`   ⚪ Tanpa status: ${kodeTanpaStatus}`);
-    console.log(`   ⚠️ Baris kosong: ${barisKosong}`);
     console.log(`   📋 Daftar kode aktif:`, kodeAktifList);
     console.log("=".repeat(60));
 }
 
 // ============================================================
-// RENDER LOG AKSES
+// FUNGSI: RENDER LOG AKSES
 // ============================================================
 function renderLogTable(data) {
     const container = document.getElementById('logTable');
     
-    if (!data || !data.table || !data.table.rows || data.table.rows.length <= 1) {
+    if (!data || !data.table || !data.table.rows || data.table.rows.length === 0) {
         container.innerHTML = `
             <p style="text-align: center; color: #6c757d; padding: 20px;">
                 <i class="fa fa-info-circle"></i> Belum ada log akses.<br>
@@ -438,8 +408,17 @@ function renderLogTable(data) {
         return;
     }
     
-    const startIndex = isHeaderRow(data.table.rows[0].c) ? 1 : 0;
+    const startIndex = (data.table.rows.length > 0 && isHeaderRow(data.table.rows[0].c)) ? 1 : 0;
     const rows = data.table.rows.slice(startIndex).slice(-20).reverse();
+    
+    if (rows.length === 0) {
+        container.innerHTML = `
+            <p style="text-align: center; color: #6c757d; padding: 20px;">
+                <i class="fa fa-info-circle"></i> Belum ada log akses.
+            </p>
+        `;
+        return;
+    }
     
     let html = `<table>
         <thead>
