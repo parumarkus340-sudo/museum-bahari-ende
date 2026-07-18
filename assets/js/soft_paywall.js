@@ -15,7 +15,7 @@ const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tq
 
 // ⚠️ PENTING: Ganti URL di bawah dengan URL Apps Script Anda
 // Cara mendapatkannya: Buka Google Sheet → Extensions → Apps Script → Deploy → New deployment → Web app
-const SCRIPT_URL = 'https://script.google.com/a/macros/guru.sd.belajar.id/s/AKfycbyC6MwzG1kjz235hJQrHIhcp0B0BHdDIHcutImgZgE/dev';
+const SCRIPT_URL = 'https://script.google.com/a/macros/guru.sd.belajar.id/s/AKfycbyC6MwzG1kjz235hJQrHIhcp0B0BHdDIHcutImgZgE/exec';
 
 // Kode cadangan jika Google Sheet offline/error
 const FALLBACK_CODES = ['DEWASA10', 'ANAK5', 'PELAJAR7', 'WNA25', 'MEMBERVIP'];
