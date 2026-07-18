@@ -1,51 +1,131 @@
 // ============================================================
 // MUSEUM BAHARI ENDE - Ngera Shells
-// File: soft_paywall.js (VERSI FINAL)
+// File: soft_paywall.js (VERSI FINAL - Dengan Logging Lengkap)
 // ============================================================
 
 const SHEET_ID = '14Yjote6VXC0LB65Sd_ZcgXdUE0kVexQFNhO_lbGhYVs';
 const SHEET_NAME = 'Kode';
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
 
-// ⚠️ Ganti dengan URL Apps Script Anda (harus berakhiran /exec)
+// ⚠️ PENTING: URL harus berakhiran /exec (bukan /dev)
 const SCRIPT_URL = 'https://script.google.com/a/macros/guru.sd.belajar.id/s/AKfycbyC6MwzG1kjz235hJQrHIhcp0B0BHdDIHcutImgZgE/exec';
 
 const FALLBACK_CODES = ['DEWASA10', 'ANAK5', 'PELAJAR7', 'WNA25', 'MEMBERVIP'];
 let VALID_CODES = [];
 
 // ============================================================
-// FUNGSI: LOG STATISTIK
-// ============================================================
-async function logAccess(code, kategori, durasi) {
-    try {
-        const data = {
-            timestamp: new Date().toISOString(),
-            code: code,
-            kategori: kategori,
-            durasi: durasi,
-            device: navigator.userAgent.substring(0, 100)
-        };
-        
-        await fetch(SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        console.log("📊 Statistik akses tercatat.");
-    } catch (e) {
-        console.warn("⚠️ Gagal mencatat statistik:", e);
-    }
-}
-
-// ============================================================
-// FUNGSI: Deteksi Header (Konsisten dengan admin.js)
+// FUNGSI: Deteksi Header
 // ============================================================
 function isHeaderRow(cells) {
     if (!cells || !cells[0] || !cells[0].v) return false;
     const firstCell = cells[0].v.toString().trim().toUpperCase();
     const headerKeywords = ['KODE', 'CODE', 'NAMA', 'NO', 'NO.', 'NOMOR', 'ID', 'KEY', 'USERNAME', 'TIMESTAMP'];
     return headerKeywords.includes(firstCell);
+}
+
+// ============================================================
+// FUNGSI: LOG STATISTIK (VERSI FINAL DENGAN DEBUG LENGKAP)
+// ============================================================
+async function logAccess(code, kategori, durasi) {
+    console.log("=".repeat(60));
+    console.log("📊 FUNGSI logAccess() DIPANGGIL");
+    console.log("   Kode:", code);
+    console.log("   Kategori:", kategori);
+    console.log("   Durasi:", durasi);
+    console.log("   SCRIPT_URL:", SCRIPT_URL);
+    
+    // Validasi URL
+    if (!SCRIPT_URL || SCRIPT_URL === '') {
+        console.error("❌ ERROR: SCRIPT_URL kosong!");
+        console.log("=".repeat(60));
+        return;
+    }
+    
+    if (SCRIPT_URL.includes('/dev')) {
+        console.error("❌ ERROR: URL masih /dev! Harus /exec agar bisa diakses pengunjung.");
+        console.log("=".repeat(60));
+        return;
+    }
+    
+    if (SCRIPT_URL.includes('GANTI_DENGAN')) {
+        console.error("❌ ERROR: URL belum diisi! Silakan update SCRIPT_URL.");
+        console.log("=".repeat(60));
+        return;
+    }
+    
+    // Siapkan data
+    const data = {
+        timestamp: new Date().toISOString(),
+        code: code,
+        kategori: kategori,
+        durasi: durasi,
+        device: navigator.userAgent.substring(0, 100)
+    };
+    
+    console.log("   Data yang akan dikirim:", JSON.stringify(data, null, 2));
+    
+    try {
+        console.log("   Mengirim data ke Apps Script...");
+        
+        const response = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'text/plain;charset=utf-8',
+            },
+            body: JSON.stringify(data)
+        });
+        
+        console.log("✅ BERHASIL! Data terkirim ke Apps Script (mode: no-cors)");
+        console.log("   Silakan cek tab 'Statistik' di Google Sheet Anda.");
+        console.log("=".repeat(60));
+        
+        // Tampilkan notifikasi visual (opsional)
+        showNotification('✅ Statistik tercatat!', 'success');
+        
+    } catch (error) {
+        console.error("❌ GAGAL mengirim data:", error);
+        console.error("   Error message:", error.message);
+        console.error("   Error name:", error.name);
+        console.log("=".repeat(60));
+        
+        showNotification('❌ Gagal mencatat statistik', 'error');
+    }
+}
+
+// ============================================================
+// FUNGSI: Tampilkan Notifikasi Visual (Opsional)
+// ============================================================
+function showNotification(message, type = 'info') {
+    const colors = {
+        success: '#10b981',
+        error: '#ef4444',
+        info: '#3b82f6'
+    };
+    
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        background: ${colors[type]};
+        color: white;
+        padding: 15px 25px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 999999;
+        font-family: 'Exo', sans-serif;
+        font-size: 0.9em;
+        animation: slideIn 0.3s ease;
+    `;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
 }
 
 // ============================================================
@@ -66,7 +146,6 @@ async function loadValidCodes() {
         const codes = [];
         let startIndex = 0;
         
-        // Skip header jika ada
         if (rows.length > 0 && isHeaderRow(rows[0].c)) {
             startIndex = 1;
             console.log("✅ Header terdeteksi, di-skip.");
@@ -167,15 +246,25 @@ document.addEventListener("DOMContentLoaded", async function() {
         if (accessInfo) accessInfo.style.display = 'none';
     }
 
+    // ========================================================
+    // FUNGSI: SAAT TOMBOL "AKTIFKAN AKSES" DIKLIK
+    // ========================================================
     window.checkAccessCode = function() {
         const code = inputCode.value.trim().toUpperCase();
-        console.log("🔑 Mencoba memasukkan kode:", code);
+        console.log("🔑 Tombol diklik. Mencoba memasukkan kode:", code);
 
         if (VALID_CODES.includes(code)) {
+            console.log("✅ Kode VALID!");
+            
             const isMember = code.includes('MEMBER') || code.includes('VIP');
             const durasi = isMember ? -1 : 60;
             const kategori = isMember ? 'Member Khusus' : 'Reguler';
             
+            console.log("   Kategori:", kategori);
+            console.log("   Durasi:", durasi);
+            
+            // PANGGIL logAccess() - INI YANG PENTING!
+            console.log("📞 Memanggil fungsi logAccess()...");
             logAccess(code, kategori, durasi);
             
             localStorage.setItem('museum_access_data', JSON.stringify({ 
