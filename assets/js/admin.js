@@ -1,4 +1,4 @@
-// assets/js/admin.js (VERSI DIPERBAIKI - Statistik Lebih Akurat)
+// assets/js/admin.js (VERSI DIPERBAIKI - Statistik Kode Lebih Akurat)
 
 // ============================================================
 // KONFIGURASI
@@ -29,7 +29,8 @@ async function readSheet(sheetName) {
         const text = await response.text();
         const jsonString = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
         const data = JSON.parse(jsonString);
-        console.log(`✅ Sheet "${sheetName}" berhasil dibaca. Baris: ${data.table?.rows?.length || 0}`);
+        const rowCount = data.table?.rows?.length || 0;
+        console.log(`✅ Sheet "${sheetName}" berhasil dibaca. Total baris: ${rowCount}`);
         return data;
     } catch (e) {
         console.error(`❌ Gagal membaca sheet ${sheetName}:`, e);
@@ -38,34 +39,20 @@ async function readSheet(sheetName) {
 }
 
 // ============================================================
-// FUNGSI UTILITAS: Parse Timestamp dari Google Sheet
+// FUNGSI UTILITAS: Parse Timestamp
 // ============================================================
 function parseTimestamp(cell) {
     if (!cell || !cell.v) return null;
-    
-    // Google Sheets bisa mengirim timestamp dalam beberapa format:
-    // 1. Number (milliseconds since epoch) - format "v"
-    // 2. String ISO - format "f" (formatted)
-    // 3. Object Date
-    
     try {
-        // Format 1: Number (paling umum dari Apps Script)
-        if (typeof cell.v === 'number') {
-            return new Date(cell.v);
-        }
-        
-        // Format 2: String (ISO atau format Google)
+        if (typeof cell.v === 'number') return new Date(cell.v);
         if (typeof cell.v === 'string') {
             const d = new Date(cell.v);
             if (!isNaN(d.getTime())) return d;
         }
-        
-        // Format 3: Gunakan formatted value "f" jika ada
         if (cell.f) {
             const d = new Date(cell.f);
             if (!isNaN(d.getTime())) return d;
         }
-        
         return null;
     } catch (e) {
         return null;
@@ -103,7 +90,6 @@ if (loginForm) {
             if (cells && cells[0] && cells[1]) {
                 const storedUser = cells[0].v?.toString().trim().toLowerCase();
                 const storedHash = cells[1].v?.toString().trim();
-                
                 if (storedUser === username.toLowerCase() && storedHash === passwordHash) {
                     valid = true;
                 }
@@ -141,9 +127,6 @@ async function loadDashboard() {
         readSheet(SHEET_KODE)
     ]);
     
-    // DEBUG: Tampilkan data mentah
-    console.log("📊 Data Statistik mentah:", statsData);
-    
     calculateStats(statsData);
     renderChart(statsData);
     renderCodesTable(codesData);
@@ -151,7 +134,7 @@ async function loadDashboard() {
 }
 
 // ============================================================
-// FUNGSI: HITUNG STATISTIK
+// FUNGSI: HITUNG STATISTIK AKSES
 // ============================================================
 function calculateStats(data) {
     const elToday = document.getElementById('statToday');
@@ -159,7 +142,6 @@ function calculateStats(data) {
     const elMonth = document.getElementById('statMonth');
     
     if (!data || !data.table || !data.table.rows || data.table.rows.length === 0) {
-        console.warn("⚠️ Tidak ada data statistik.");
         elToday.textContent = '0';
         elWeek.textContent = '0';
         elMonth.textContent = '0';
@@ -167,29 +149,19 @@ function calculateStats(data) {
     }
     
     const now = new Date();
-    const todayStr = now.toDateString();
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     
     let todayCount = 0, weekCount = 0, monthCount = 0;
-    let parsedCount = 0;
     
     data.table.rows.forEach((row, index) => {
-        // Skip header row
-        if (index === 0) return;
-        
+        if (index === 0) return; // Skip header
         const cells = row.c;
         if (!cells || !cells[0]) return;
         
         const timestamp = parseTimestamp(cells[0]);
-        if (!timestamp) {
-            console.warn(`⚠️ Baris ${index + 1}: Timestamp tidak valid:`, cells[0]);
-            return;
-        }
+        if (!timestamp) return;
         
-        parsedCount++;
-        
-        // Normalisasi ke awal hari untuk perbandingan yang akurat
         const tsDay = new Date(timestamp.getFullYear(), timestamp.getMonth(), timestamp.getDate());
         const todayDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         
@@ -197,8 +169,6 @@ function calculateStats(data) {
         if (timestamp >= weekAgo) weekCount++;
         if (timestamp >= monthAgo) monthCount++;
     });
-    
-    console.log(`📈 Statistik: Hari=${todayCount}, Minggu=${weekCount}, Bulan=${monthCount}, Total parsed=${parsedCount}`);
     
     elToday.textContent = todayCount;
     elWeek.textContent = weekCount;
@@ -222,7 +192,6 @@ function renderChart(data) {
         return;
     }
     
-    // Siapkan 7 hari terakhir
     const days = [];
     const now = new Date();
     for (let i = 6; i >= 0; i--) {
@@ -234,9 +203,8 @@ function renderChart(data) {
         });
     }
     
-    // Hitung akses per hari
     data.table.rows.forEach((row, index) => {
-        if (index === 0) return; // Skip header
+        if (index === 0) return;
         const cells = row.c;
         if (!cells || !cells[0]) return;
         
@@ -265,21 +233,36 @@ function renderChart(data) {
 }
 
 // ============================================================
-// FUNGSI: RENDER TABEL KODE
+// FUNGSI: RENDER TABEL KODE (VERSI DIPERBAIKI)
 // ============================================================
 async function renderCodesTable(data) {
     const container = document.getElementById('codesTable');
+    const elStatCodes = document.getElementById('statCodes');
     
-    if (!data || !data.table || !data.table.rows || data.table.rows.length === 0) {
+    if (!data || !data.table || !data.table.rows) {
         container.innerHTML = '<p>Tidak ada data kode.</p>';
-        document.getElementById('statCodes').textContent = '0';
+        elStatCodes.textContent = '0';
         return;
     }
     
-    let activeCount = 0;
+    // ============================================================
+    // LOGIKA BARU: Hitung statistik dengan detail
+    // ============================================================
+    let totalRows = 0;           // Total baris terbaca (termasuk header)
+    let totalKodes = 0;          // Total kode valid (bukan header, bukan kosong)
+    let kodeAktif = 0;           // Kode dengan status = "aktif"
+    let kodeNonaktif = 0;        // Kode dengan status = "nonaktif"
+    let kodeTanpaStatus = 0;     // Kode tanpa status (dianggap aktif)
+    let barisKosong = 0;         // Baris yang terbaca tapi kosong
+    let headerSkipped = false;   // Apakah header sudah di-skip
+    
+    let kodeAktifList = [];      // Daftar kode aktif (untuk debug)
+    let kodeNonaktifList = [];   // Daftar kode nonaktif (untuk debug)
+    
     let html = `<table>
         <thead>
             <tr>
+                <th>No</th>
                 <th>Kode</th>
                 <th>Kategori</th>
                 <th>Durasi</th>
@@ -289,35 +272,73 @@ async function renderCodesTable(data) {
         </thead>
         <tbody>`;
     
+    let nomor = 1;
+    
     data.table.rows.forEach((row, index) => {
-        if (index === 0) return; // Skip header
+        totalRows++;
         const cells = row.c;
-        if (!cells || !cells[0] || !cells[0].v) return;
         
-        const kode = cells[0].v.toString().trim();
+        // Skip baris pertama jika berisi header "Kode"
+        if (index === 0 && cells && cells[0] && cells[0].v) {
+            const firstCell = cells[0].v.toString().trim().toUpperCase();
+            if (firstCell === 'KODE') {
+                headerSkipped = true;
+                console.log(`✅ Header "KODE" terdeteksi di baris 1, di-skip.`);
+                return;
+            }
+        }
+        
+        // Abaikan baris yang benar-benar kosong
+        if (!cells || cells.every(c => !c || !c.v || c.v.toString().trim() === '')) {
+            barisKosong++;
+            return;
+        }
+        
+        const kode = cells[0]?.v?.toString().trim();
+        if (!kode) {
+            barisKosong++;
+            return;
+        }
+        
+        totalKodes++;
         const kategori = cells[1]?.v?.toString() || '-';
         const durasi = cells[2]?.v || 60;
-        const status = cells[5]?.v?.toString().toLowerCase() || 'aktif';
+        const status = cells[5]?.v?.toString().trim().toLowerCase() || '';
         
-        if (status === 'aktif') activeCount++;
+        // Klasifikasi status
+        if (status === 'aktif') {
+            kodeAktif++;
+            kodeAktifList.push(kode);
+        } else if (status === 'nonaktif') {
+            kodeNonaktif++;
+            kodeNonaktifList.push(kode);
+        } else {
+            // Tidak ada status atau status tidak dikenal → dianggap aktif
+            kodeTanpaStatus++;
+            kodeAktif++;
+            kodeAktifList.push(kode);
+        }
         
         const isMember = durasi == -1;
-        const statusBadge = status === 'aktif' 
+        const statusBadge = status === 'aktif' || status === ''
             ? '<span class="badge-aktif">Aktif</span>' 
             : '<span class="badge-nonaktif">Nonaktif</span>';
         const kategoriBadge = isMember 
             ? `<span class="badge-member"><i class="fa fa-diamond"></i> ${kategori}</span>`
             : kategori;
         
+        const statusForToggle = (status === 'aktif' || status === '') ? 'nonaktif' : 'aktif';
+        
         html += `
             <tr>
+                <td>${nomor++}</td>
                 <td><strong>${kode}</strong></td>
                 <td>${kategoriBadge}</td>
                 <td>${isMember ? '∞ Permanen' : durasi + ' menit'}</td>
                 <td>${statusBadge}</td>
                 <td>
-                    <button class="btn-action btn-toggle" onclick="toggleCode('${kode}', '${status === 'aktif' ? 'nonaktif' : 'aktif'}')">
-                        <i class="fa fa-${status === 'aktif' ? 'ban' : 'check'}"></i>
+                    <button class="btn-action btn-toggle" onclick="toggleCode('${kode}', '${statusForToggle}')">
+                        <i class="fa fa-${statusForToggle === 'aktif' ? 'check' : 'ban'}"></i>
                     </button>
                 </td>
             </tr>
@@ -325,8 +346,48 @@ async function renderCodesTable(data) {
     });
     
     html += '</tbody></table>';
-    container.innerHTML = html;
-    document.getElementById('statCodes').textContent = activeCount;
+    
+    // ============================================================
+    // TAMPILKAN RINGKASAN STATISTIK KODE (Transparan!)
+    // ============================================================
+    const summaryHtml = `
+        <div style="background: #f8f9fa; border-left: 4px solid #b8860b; padding: 15px; margin-bottom: 20px; border-radius: 6px; font-size: 0.9em;">
+            <strong style="color: #0a192f;"><i class="fa fa-info-circle"></i> Ringkasan Data dari Google Sheet:</strong><br>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 10px;">
+                <div>📊 Total baris terbaca: <strong>${totalRows}</strong></div>
+                <div>✅ Header di-skip: <strong>${headerSkipped ? 'Ya' : 'Tidak'}</strong></div>
+                <div>📝 Total kode valid: <strong>${totalKodes}</strong></div>
+                <div>🟢 Kode Aktif: <strong style="color: #10b981;">${kodeAktif}</strong></div>
+                <div>🔴 Kode Nonaktif: <strong style="color: #ef4444;">${kodeNonaktif}</strong></div>
+                <div>⚪ Kode tanpa status: <strong style="color: #6c757d;">${kodeTanpaStatus}</strong></div>
+                <div>⚠️ Baris kosong: <strong>${barisKosong}</strong></div>
+            </div>
+            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #dee2e6; font-size: 0.85em; color: #6c757d;">
+                <strong>💡 Catatan:</strong> Angka "Total Kode Aktif" di kartu atas menampilkan <strong>${kodeAktif}</strong> kode 
+                (kode aktif + kode tanpa status).
+                ${kodeTanpaStatus > 0 ? `<br><strong>⚠️ Perhatian:</strong> Ada ${kodeTanpaStatus} kode tanpa status yang otomatis dianggap aktif. Isi kolom Status (F) dengan "aktif" atau "nonaktif" untuk kontrol yang lebih baik.` : ''}
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = summaryHtml + html;
+    
+    // Update kartu statistik dengan angka yang akurat
+    elStatCodes.textContent = kodeAktif;
+    
+    // Log detail untuk debugging
+    console.log("=".repeat(60));
+    console.log("📊 RINGKASAN STATISTIK KODE:");
+    console.log(`   Total baris terbaca: ${totalRows}`);
+    console.log(`   Header di-skip: ${headerSkipped}`);
+    console.log(`   Total kode valid: ${totalKodes}`);
+    console.log(`   ✅ Kode Aktif: ${kodeAktif}`);
+    console.log(`   ❌ Kode Nonaktif: ${kodeNonaktif}`);
+    console.log(`   ⚪ Tanpa status: ${kodeTanpaStatus}`);
+    console.log(`   ⚠️ Baris kosong: ${barisKosong}`);
+    console.log(`   📋 Daftar kode aktif:`, kodeAktifList);
+    console.log(`   📋 Daftar kode nonaktif:`, kodeNonaktifList);
+    console.log("=".repeat(60));
 }
 
 // ============================================================
@@ -345,7 +406,6 @@ function renderLogTable(data) {
         return;
     }
     
-    // Ambil 20 terbaru (skip header, lalu reverse)
     const rows = data.table.rows.slice(1).slice(-20).reverse();
     
     let html = `<table>
@@ -426,7 +486,7 @@ function addCode() {
 
 function toggleCode(kode, newStatus) {
     const message = `Untuk mengubah status kode "${kode}" menjadi "${newStatus}", ` +
-                    `silakan ubah kolom Status di Google Sheet.\n\nKlik OK untuk membuka Google Sheet.`;
+                    `silakan ubah kolom Status (F) di Google Sheet.\n\nKlik OK untuk membuka Google Sheet.`;
     if (confirm(message)) {
         window.open(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`, '_blank');
     }
@@ -438,11 +498,4 @@ function logout() {
         localStorage.removeItem('admin_username');
         window.location.href = 'admin.html';
     }
-}
-
-// ============================================================
-// FUNGSI: REFRESH DASHBOARD MANUAL
-// ============================================================
-function refreshDashboard() {
-    location.reload();
 }
