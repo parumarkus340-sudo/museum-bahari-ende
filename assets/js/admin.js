@@ -1,4 +1,4 @@
-// assets/js/admin.js
+// assets/js/admin.js (VERSI DIPERBAIKI - Statistik Lebih Akurat)
 
 // ============================================================
 // KONFIGURASI
@@ -9,7 +9,7 @@ const SHEET_STATISTIK = 'Statistik';
 const SHEET_ADMIN = 'Admin';
 
 // ============================================================
-// FUNGSI UTILITAS: SHA-256 Hash (untuk password)
+// FUNGSI UTILITAS: SHA-256 Hash
 // ============================================================
 async function sha256(message) {
     const msgBuffer = new TextEncoder().encode(message);
@@ -24,12 +24,50 @@ async function sha256(message) {
 async function readSheet(sheetName) {
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
     try {
+        console.log(`📖 Membaca sheet: ${sheetName}...`);
         const response = await fetch(url);
         const text = await response.text();
         const jsonString = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-        return JSON.parse(jsonString);
+        const data = JSON.parse(jsonString);
+        console.log(`✅ Sheet "${sheetName}" berhasil dibaca. Baris: ${data.table?.rows?.length || 0}`);
+        return data;
     } catch (e) {
-        console.error(`Gagal membaca sheet ${sheetName}:`, e);
+        console.error(`❌ Gagal membaca sheet ${sheetName}:`, e);
+        return null;
+    }
+}
+
+// ============================================================
+// FUNGSI UTILITAS: Parse Timestamp dari Google Sheet
+// ============================================================
+function parseTimestamp(cell) {
+    if (!cell || !cell.v) return null;
+    
+    // Google Sheets bisa mengirim timestamp dalam beberapa format:
+    // 1. Number (milliseconds since epoch) - format "v"
+    // 2. String ISO - format "f" (formatted)
+    // 3. Object Date
+    
+    try {
+        // Format 1: Number (paling umum dari Apps Script)
+        if (typeof cell.v === 'number') {
+            return new Date(cell.v);
+        }
+        
+        // Format 2: String (ISO atau format Google)
+        if (typeof cell.v === 'string') {
+            const d = new Date(cell.v);
+            if (!isNaN(d.getTime())) return d;
+        }
+        
+        // Format 3: Gunakan formatted value "f" jika ada
+        if (cell.f) {
+            const d = new Date(cell.f);
+            if (!isNaN(d.getTime())) return d;
+        }
+        
+        return null;
+    } catch (e) {
         return null;
     }
 }
@@ -39,7 +77,6 @@ async function readSheet(sheetName) {
 // ============================================================
 const loginForm = document.getElementById('loginForm');
 if (loginForm) {
-    // Cek apakah sudah login
     if (localStorage.getItem('admin_logged_in') === 'true') {
         window.location.href = 'dashboard.html';
     }
@@ -51,11 +88,8 @@ if (loginForm) {
         const errorMsg = document.getElementById('errorMsg');
         
         errorMsg.style.display = 'none';
-        
-        // Hash password
         const passwordHash = await sha256(password);
         
-        // Baca sheet Admin
         const data = await readSheet(SHEET_ADMIN);
         if (!data || !data.table || !data.table.rows) {
             errorMsg.innerHTML = '<i class="fa fa-exclamation-circle"></i> Gagal terhubung ke server.';
@@ -63,7 +97,6 @@ if (loginForm) {
             return;
         }
         
-        // Cari username yang cocok
         let valid = false;
         data.table.rows.forEach(row => {
             const cells = row.c;
@@ -92,7 +125,6 @@ if (loginForm) {
 // HALAMAN DASHBOARD (dashboard.html)
 // ============================================================
 if (document.getElementById('statToday')) {
-    // Cek apakah sudah login
     if (localStorage.getItem('admin_logged_in') !== 'true') {
         window.location.href = 'admin.html';
     } else {
@@ -102,83 +134,117 @@ if (document.getElementById('statToday')) {
 }
 
 async function loadDashboard() {
-    // Load semua data secara paralel
+    console.log("🚀 Memuat dashboard...");
+    
     const [statsData, codesData] = await Promise.all([
         readSheet(SHEET_STATISTIK),
         readSheet(SHEET_KODE)
     ]);
     
-    // Hitung statistik
+    // DEBUG: Tampilkan data mentah
+    console.log("📊 Data Statistik mentah:", statsData);
+    
     calculateStats(statsData);
-    
-    // Render grafik
     renderChart(statsData);
-    
-    // Render tabel kode
     renderCodesTable(codesData);
-    
-    // Render log akses
     renderLogTable(statsData);
 }
 
+// ============================================================
+// FUNGSI: HITUNG STATISTIK
+// ============================================================
 function calculateStats(data) {
-    if (!data || !data.table || !data.table.rows) {
-        document.getElementById('statToday').textContent = '0';
-        document.getElementById('statWeek').textContent = '0';
-        document.getElementById('statMonth').textContent = '0';
+    const elToday = document.getElementById('statToday');
+    const elWeek = document.getElementById('statWeek');
+    const elMonth = document.getElementById('statMonth');
+    
+    if (!data || !data.table || !data.table.rows || data.table.rows.length === 0) {
+        console.warn("⚠️ Tidak ada data statistik.");
+        elToday.textContent = '0';
+        elWeek.textContent = '0';
+        elMonth.textContent = '0';
         return;
     }
     
     const now = new Date();
-    const today = now.toDateString();
+    const todayStr = now.toDateString();
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     
     let todayCount = 0, weekCount = 0, monthCount = 0;
+    let parsedCount = 0;
     
-    data.table.rows.forEach(row => {
+    data.table.rows.forEach((row, index) => {
+        // Skip header row
+        if (index === 0) return;
+        
         const cells = row.c;
-        if (!cells || !cells[0] || !cells[0].v) return;
+        if (!cells || !cells[0]) return;
         
-        const timestamp = new Date(cells[0].v);
-        if (isNaN(timestamp)) return;
+        const timestamp = parseTimestamp(cells[0]);
+        if (!timestamp) {
+            console.warn(`⚠️ Baris ${index + 1}: Timestamp tidak valid:`, cells[0]);
+            return;
+        }
         
-        if (timestamp.toDateString() === today) todayCount++;
+        parsedCount++;
+        
+        // Normalisasi ke awal hari untuk perbandingan yang akurat
+        const tsDay = new Date(timestamp.getFullYear(), timestamp.getMonth(), timestamp.getDate());
+        const todayDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        
+        if (tsDay.getTime() === todayDay.getTime()) todayCount++;
         if (timestamp >= weekAgo) weekCount++;
         if (timestamp >= monthAgo) monthCount++;
     });
     
-    document.getElementById('statToday').textContent = todayCount;
-    document.getElementById('statWeek').textContent = weekCount;
-    document.getElementById('statMonth').textContent = monthCount;
+    console.log(`📈 Statistik: Hari=${todayCount}, Minggu=${weekCount}, Bulan=${monthCount}, Total parsed=${parsedCount}`);
+    
+    elToday.textContent = todayCount;
+    elWeek.textContent = weekCount;
+    elMonth.textContent = monthCount;
 }
 
+// ============================================================
+// FUNGSI: RENDER GRAFIK 7 HARI
+// ============================================================
 function renderChart(data) {
     const container = document.getElementById('chartContainer');
-    if (!data || !data.table || !data.table.rows) {
-        container.innerHTML = '<div class="loading">Tidak ada data</div>';
+    
+    if (!data || !data.table || !data.table.rows || data.table.rows.length === 0) {
+        container.innerHTML = `
+            <div class="loading">
+                <i class="fa fa-info-circle" style="color: #ffc107;"></i><br>
+                Belum ada data statistik.<br>
+                <small style="color: #94a3b8;">Data akan muncul setelah pengunjung menggunakan kode akses.</small>
+            </div>
+        `;
         return;
     }
     
-    // Hitung akses per hari (7 hari terakhir)
+    // Siapkan 7 hari terakhir
     const days = [];
     const now = new Date();
     for (let i = 6; i >= 0; i--) {
         const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
         days.push({
-            date: date.toDateString(),
+            dateKey: `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`,
             label: date.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' }),
             count: 0
         });
     }
     
-    data.table.rows.forEach(row => {
+    // Hitung akses per hari
+    data.table.rows.forEach((row, index) => {
+        if (index === 0) return; // Skip header
         const cells = row.c;
-        if (!cells || !cells[0] || !cells[0].v) return;
-        const timestamp = new Date(cells[0].v);
-        if (isNaN(timestamp)) return;
+        if (!cells || !cells[0]) return;
         
-        const day = days.find(d => d.date === timestamp.toDateString());
+        const timestamp = parseTimestamp(cells[0]);
+        if (!timestamp) return;
+        
+        const dateKey = `${timestamp.getFullYear()}-${timestamp.getMonth()}-${timestamp.getDate()}`;
+        const day = days.find(d => d.dateKey === dateKey);
         if (day) day.count++;
     });
     
@@ -198,9 +264,13 @@ function renderChart(data) {
     container.innerHTML = html;
 }
 
+// ============================================================
+// FUNGSI: RENDER TABEL KODE
+// ============================================================
 async function renderCodesTable(data) {
     const container = document.getElementById('codesTable');
-    if (!data || !data.table || !data.table.rows) {
+    
+    if (!data || !data.table || !data.table.rows || data.table.rows.length === 0) {
         container.innerHTML = '<p>Tidak ada data kode.</p>';
         document.getElementById('statCodes').textContent = '0';
         return;
@@ -220,6 +290,7 @@ async function renderCodesTable(data) {
         <tbody>`;
     
     data.table.rows.forEach((row, index) => {
+        if (index === 0) return; // Skip header
         const cells = row.c;
         if (!cells || !cells[0] || !cells[0].v) return;
         
@@ -258,15 +329,24 @@ async function renderCodesTable(data) {
     document.getElementById('statCodes').textContent = activeCount;
 }
 
+// ============================================================
+// FUNGSI: RENDER LOG AKSES
+// ============================================================
 function renderLogTable(data) {
     const container = document.getElementById('logTable');
-    if (!data || !data.table || !data.table.rows || data.table.rows.length === 0) {
-        container.innerHTML = '<p>Belum ada log akses.</p>';
+    
+    if (!data || !data.table || !data.table.rows || data.table.rows.length <= 1) {
+        container.innerHTML = `
+            <p style="text-align: center; color: #6c757d; padding: 20px;">
+                <i class="fa fa-info-circle"></i> Belum ada log akses.<br>
+                <small>Log akan muncul setelah pengunjung menggunakan kode akses.</small>
+            </p>
+        `;
         return;
     }
     
-    // Ambil 20 terbaru (dari bawah)
-    const rows = data.table.rows.slice(-20).reverse();
+    // Ambil 20 terbaru (skip header, lalu reverse)
+    const rows = data.table.rows.slice(1).slice(-20).reverse();
     
     let html = `<table>
         <thead>
@@ -283,12 +363,12 @@ function renderLogTable(data) {
         const cells = row.c;
         if (!cells) return;
         
-        const timestamp = cells[0]?.v ? new Date(cells[0].v) : '-';
+        const timestamp = parseTimestamp(cells[0]);
         const kode = cells[1]?.v?.toString() || '-';
         const kategori = cells[2]?.v?.toString() || '-';
         const durasi = cells[3]?.v;
         
-        const waktu = timestamp instanceof Date && !isNaN(timestamp)
+        const waktu = timestamp 
             ? timestamp.toLocaleString('id-ID', { 
                 day: '2-digit', month: 'short', year: 'numeric',
                 hour: '2-digit', minute: '2-digit'
@@ -312,7 +392,7 @@ function renderLogTable(data) {
 // ============================================================
 // AKSI ADMIN
 // ============================================================
-async function addCode() {
+function addCode() {
     const kode = document.getElementById('newCode').value.trim().toUpperCase();
     const durasi = document.getElementById('newDurasi').value;
     const kategori = document.getElementById('newKategori').value;
@@ -322,25 +402,13 @@ async function addCode() {
         return;
     }
     
-    // Karena Google Sheets tidak bisa ditulis langsung dari client-side JavaScript
-    // (butuh Apps Script), kita buka sheet di tab baru untuk admin menambahkan manual
     const hargaMap = {
-        'Dewasa': 10000,
-        'Anak-anak': 5000,
-        'Pelajar': 7000,
-        'Wisatawan Asing': 25000,
-        'Member Khusus': 0
-    };
-    const labelMap = {
-        'Dewasa': 'Dewasa (1 Jam)',
-        'Anak-anak': 'Anak-anak (1 Jam)',
-        'Pelajar': 'Pelajar (1 Jam)',
-        'Wisatawan Asing': 'Wisatawan Asing (1 Jam)',
-        'Member Khusus': 'Member Khusus (Bebas)'
+        'Dewasa': 10000, 'Anak-anak': 5000, 'Pelajar': 7000,
+        'Wisatawan Asing': 25000, 'Member Khusus': 0
     };
     const harga = kategori === 'Member Khusus' ? 'Gratis' : 'Rp' + (hargaMap[kategori] || 10000).toLocaleString('id-ID');
-    const label = kategori === 'Member Khusus' ? 'Member Khusus (Bebas)' : `${kategori} (${durasi} Menit)`;
     const finalDurasi = kategori === 'Member Khusus' ? -1 : durasi;
+    const label = kategori === 'Member Khusus' ? 'Member Khusus (Bebas)' : `${kategori} (${durasi} Menit)`;
     
     const message = `Silakan tambahkan baris baru di Google Sheet dengan data:\n\n` +
                     `Kode: ${kode}\n` +
@@ -356,11 +424,9 @@ async function addCode() {
     }
 }
 
-async function toggleCode(kode, newStatus) {
-    // Sama seperti addCode - buka sheet untuk admin mengubah status
+function toggleCode(kode, newStatus) {
     const message = `Untuk mengubah status kode "${kode}" menjadi "${newStatus}", ` +
                     `silakan ubah kolom Status di Google Sheet.\n\nKlik OK untuk membuka Google Sheet.`;
-    
     if (confirm(message)) {
         window.open(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`, '_blank');
     }
@@ -372,4 +438,11 @@ function logout() {
         localStorage.removeItem('admin_username');
         window.location.href = 'admin.html';
     }
+}
+
+// ============================================================
+// FUNGSI: REFRESH DASHBOARD MANUAL
+// ============================================================
+function refreshDashboard() {
+    location.reload();
 }
