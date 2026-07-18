@@ -8,7 +8,7 @@ const SHEET_NAME = 'Kode';
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
 
 // ⚠️ PENTING: URL harus berakhiran /exec (bukan /dev)
-const SCRIPT_URL = 'https://script.google.com/a/macros/guru.sd.belajar.id/s/AKfycbyC6MwzG1kjz235hJQrHIhcp0B0BHdDIHcutImgZgE/exec';
+const SCRIPT_URL = 'https://script.google.com/a/macros/guru.sd.belajar.id/s/AKfycbwnDrfJOvBSu6bYDyGvHoi7pN5Np1Ong5RfVG1L1bqup0suMLJ7Zymwq-MDR1qoO_ku/exec';
 
 const FALLBACK_CODES = ['DEWASA10', 'ANAK5', 'PELAJAR7', 'WNA25', 'MEMBERVIP'];
 let VALID_CODES = [];
