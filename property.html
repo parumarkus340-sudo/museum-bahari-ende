@@ -33,61 +33,104 @@
 
 <body data-spy="scroll" data-offset="80">
 
-			<!-- ========================================================== -->
+	<!-- ========================================================== -->
+	<!-- START: INFO AKSES AKTIF (Muncul di pojok kanan atas)       -->
+	<!-- ========================================================== -->
+	<div id="access-info" style="display: none; position: fixed; top: 80px; right: 20px; background: rgba(16, 185, 129, 0.95); color: white; padding: 10px 18px; border-radius: 50px; z-index: 99998; font-size: 0.9em; font-family: 'Exo', sans-serif; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer;" onclick="logoutAccess()" title="Klik untuk mengakhiri akses">
+	</div>
+	<!-- ========================================================== -->
+	<!-- END: INFO AKSES AKTIF                                      -->
+	<!-- ========================================================== -->
+
+	<!-- ========================================================== -->
 	<!-- START: PAYWALL OVERLAY (Kunci Akses Halaman Koleksi)       -->
 	<!-- ========================================================== -->
-	<div id="paywall-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 25, 47, 0.95); z-index: 99999; justify-content: center; align-items: center; flex-direction: column; color: white; text-align: center; padding: 20px; font-family: 'Exo', sans-serif;">
+	<div id="paywall-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 25, 47, 0.95); z-index: 99999; justify-content: center; align-items: center; flex-direction: column; color: white; text-align: center; padding: 20px; font-family: 'Exo', sans-serif; overflow-y: auto;">
 		
 		<!-- TOMBOL KEMBALI KE BERANDA -->
 		<a href="index.html" style="position: absolute; top: 25px; left: 25px; color: #cbd5e1; text-decoration: none; font-size: 0.95em; padding: 8px 18px; border: 1px solid rgba(255,255,255,0.25); border-radius: 50px; transition: all 0.3s; background: rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(255,255,255,0.15)'; this.style.color='#fff';" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.color='#cbd5e1';">
 			<i class="fa fa-arrow-left"></i> Kembali ke Beranda
 		</a>
 
-		<i class="fa fa-lock" style="font-size: 60px; color: #b8860b; margin-bottom: 20px;"></i>
-		<h2 style="color: #fff; margin-bottom: 15px;">Akses Khusus Pendukung Museum</h2>
+		<i class="fa fa-ticket" style="font-size: 60px; color: #b8860b; margin-bottom: 20px;"></i>
+		<h2 style="color: #fff; margin-bottom: 10px;">Tiket Akses Koleksi Museum</h2>
 		<p style="max-width: 600px; margin-bottom: 25px; line-height: 1.6; color: #cbd5e1;">
-			Halaman Katalog Koleksi & Fosil ini hanya dapat diakses oleh pengunjung yang telah melakukan deposit/donasi untuk mendukung pelestarian Museum Bahari Ende "Ngera Shells".
+			Dukung pelestarian Museum Bahari Ende "Ngera Shells" dan dapatkan akses eksklusif ke Katalog Koleksi & Fosil.
 		</p>
 		
-		<div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); max-width: 500px; width: 100%;">
-			<p style="margin-bottom: 15px; font-size: 0.95em;">
-				<strong>Langkah Mendapatkan Akses:</strong><br>
-				1. Lakukan transfer deposit/donasi.<br>
-				2. Konfirmasi via WhatsApp ke salah satu admin di bawah.<br>
-				3. Admin akan memberikan <strong>Kode Akses</strong> kepada Anda.
+		<div style="background: rgba(255,255,255,0.08); padding: 25px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); max-width: 650px; width: 100%;">
+			
+			<!-- ✨ TABEL HARGA TIKET -->
+			<h4 style="color: #b8860b; margin-bottom: 15px;"><i class="fa fa-list-ul"></i> Pilihan Tiket Akses</h4>
+			<div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: left;">
+				<div style="display: flex; justify-content: space-between; padding: 10px 5px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+					<span><i class="fa fa-user"></i> Dewasa</span>
+					<strong style="color: #fbbf24;">Rp 10.000 <small style="opacity:0.7;">/ jam</small></strong>
+				</div>
+				<div style="display: flex; justify-content: space-between; padding: 10px 5px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+					<span><i class="fa fa-child"></i> Anak-anak</span>
+					<strong style="color: #fbbf24;">Rp 5.000 <small style="opacity:0.7;">/ jam</small></strong>
+				</div>
+				<div style="display: flex; justify-content: space-between; padding: 10px 5px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+					<span><i class="fa fa-graduation-cap"></i> Pelajar <small style="opacity:0.7;">(dengan kartu)</small></span>
+					<strong style="color: #fbbf24;">Rp 7.000 <small style="opacity:0.7;">/ jam</small></strong>
+				</div>
+				<div style="display: flex; justify-content: space-between; padding: 10px 5px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+					<span><i class="fa fa-globe"></i> Wisatawan Asing</span>
+					<strong style="color: #fbbf24;">Rp 25.000 <small style="opacity:0.7;">/ jam</small></strong>
+				</div>
+				<div style="display: flex; justify-content: space-between; padding: 10px 5px; background: rgba(184, 134, 11, 0.15); border-radius: 5px; margin-top: 5px;">
+					<span><i class="fa fa-diamond"></i> <strong>Member Khusus</strong></span>
+					<strong style="color: #10b981;">BEBAS AKSES</strong>
+				</div>
+			</div>
+
+			<!-- LANGKAH-LANGKAH -->
+			<p style="margin-bottom: 15px; font-size: 0.9em; color: #cbd5e1;">
+				<strong>Cara Mendapatkan Kode Akses:</strong><br>
+				1. Transfer sesuai kategori pilihan Anda.<br>
+				2. Konfirmasi via WhatsApp ke salah satu admin.<br>
+				3. Admin akan memberikan <strong>Kode Akses</strong> sesuai kategori.
 			</p>
 			
-			<!-- ✨ 2 TOMBOL WHATSAPP ADMIN -->
-			<div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
-				<!-- Admin 1 -->
-				<a href="https://wa.me/6281338607300?text=Halo%20Admin,%20saya%20ingin%20mendapatkan%20Kode%20Akses%20untuk%20halaman%20Koleksi%20Museum%20Bahari%20Ende%20setelah%20melakukan%20deposit." target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 10px; background-color: #25D366; color: white; padding: 12px 25px; border-radius: 50px; text-decoration: none; font-weight: bold; transition: 0.3s;" onmouseover="this.style.background='#1ebe57';" onmouseout="this.style.background='#25D366';">
-					<i class="fa fa-whatsapp" style="font-size: 1.3em;"></i>
+			<!-- 2 TOMBOL WHATSAPP ADMIN -->
+			<div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+				<a href="https://wa.me/6281338607300?text=Halo%20Admin,%20saya%20ingin%20membeli%20Tiket%20Akses%20Koleksi%20Museum%20Bahari%20Ende." target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 10px; background-color: #25D366; color: white; padding: 11px 20px; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 0.9em; transition: 0.3s;" onmouseover="this.style.background='#1ebe57';" onmouseout="this.style.background='#25D366';">
+					<i class="fa fa-whatsapp" style="font-size: 1.2em;"></i>
 					<span>Chat Admin 1 (+62 813-3860-7300)</span>
 				</a>
-				
-				<!-- Admin 2 -->
-				<a href="https://wa.me/6281353810065?text=Halo%20Admin,%20saya%20ingin%20mendapatkan%20Kode%20Akses%20untuk%20halaman%20Koleksi%20Museum%20Bahari%20Ende%20setelah%20melakukan%20deposit." target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 10px; background-color: #25D366; color: white; padding: 12px 25px; border-radius: 50px; text-decoration: none; font-weight: bold; transition: 0.3s;" onmouseover="this.style.background='#1ebe57';" onmouseout="this.style.background='#25D366';">
-					<i class="fa fa-whatsapp" style="font-size: 1.3em;"></i>
+				<a href="https://wa.me/6281353810065?text=Halo%20Admin,%20saya%20ingin%20membeli%20Tiket%20Akses%20Koleksi%20Museum%20Bahari%20Ende." target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 10px; background-color: #25D366; color: white; padding: 11px 20px; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 0.9em; transition: 0.3s;" onmouseover="this.style.background='#1ebe57';" onmouseout="this.style.background='#25D366';">
+					<i class="fa fa-whatsapp" style="font-size: 1.2em;"></i>
 					<span>Chat Admin 2 (+62 813-5381-0065)</span>
 				</a>
 			</div>
 
+			<!-- ✨ TAMBAHAN: LINK PENDAFTARAN MEMBER (Opsional) -->
+			<div style="margin-bottom: 20px; padding: 10px; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border: 1px dashed rgba(16, 185, 129, 0.5);">
+				<p style="margin: 0; font-size: 0.85em; color: #cbd5e1;">
+					<i class="fa fa-star" style="color: #fbbf24;"></i> Ingin akses permanen tanpa batas waktu? 
+					<a href="#" target="_blank" style="color: #10b981; font-weight: bold; text-decoration: underline;">Daftar Member Khusus di sini</a>
+					*(Ganti # dengan link Google Form Anda)*
+				</p>
+			</div>
+
+			<!-- INPUT KODE AKSES -->
 			<div style="border-top: 1px solid rgba(255,255,255,0.2); padding-top: 20px;">
 				<label for="accessCode" style="display: block; margin-bottom: 10px; font-size: 0.9em;">Sudah punya kode? Masukkan di sini:</label>
-				<input type="text" id="accessCode" placeholder="Contoh: NGERA2026" style="padding: 12px; border-radius: 6px; border: none; text-align: center; font-size: 16px; width: 80%; margin-bottom: 15px; letter-spacing: 2px; text-transform: uppercase;">
+				<input type="text" id="accessCode" placeholder="Contoh: DEWASA10" style="padding: 12px; border-radius: 6px; border: none; text-align: center; font-size: 16px; width: 80%; margin-bottom: 15px; letter-spacing: 2px; text-transform: uppercase;">
 				<br>
 				<button onclick="checkAccessCode()" style="background-color: #b8860b; color: white; border: none; padding: 12px 30px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s;">
-					<i class="fa fa-unlock"></i> Buka Akses
+					<i class="fa fa-unlock"></i> Aktifkan Akses
 				</button>
 				<p id="error-msg" style="color: #ff6b6b; margin-top: 15px; display: none; font-size: 0.9em;">
-					<i class="fa fa-exclamation-circle"></i> Kode salah atau kadaluarsa. Silakan hubungi admin.
+					<i class="fa fa-exclamation-circle"></i> Kode tidak valid. Silakan hubungi admin.
 				</p>
 			</div>
 		</div>
 
 		<!-- INFO TAMBAHAN DI BAWAH -->
 		<p style="margin-top: 25px; font-size: 0.85em; color: #94a3b8; max-width: 500px;">
-			Ingin menjelajahi halaman lain? Silakan kembali ke beranda untuk mengakses <strong>Tentang Kami, Galeri, Berita,</strong> dan <strong>Kontak</strong>.
+			Ingin menjelajahi halaman lain? Silakan <a href="index.html" style="color: #fbbf24;">kembali ke beranda</a> untuk mengakses Tentang Kami, Galeri, Berita, dan Kontak.
 		</p>
 	</div>
 	<!-- ========================================================== -->
