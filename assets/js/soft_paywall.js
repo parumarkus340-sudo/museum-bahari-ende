@@ -1,36 +1,22 @@
 // ============================================================
-// MUSEUM BAHARI ENDE - NGera Shells
-// File: soft_paywall.js (VERSI FINAL LENGKAP + LOG STATISTIK)
+// MUSEUM BAHARI ENDE - Ngera Shells
+// File: soft_paywall.js (VERSI FINAL)
 // ============================================================
 
-// ============================================================
-// KONFIGURASI
-// ============================================================
 const SHEET_ID = '14Yjote6VXC0LB65Sd_ZcgXdUE0kVexQFNhO_lbGhYVs';
 const SHEET_NAME = 'Kode';
-const SHEET_STATISTIK = 'Statistik';
-
-// URL Google Sheet (untuk membaca kode akses)
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
 
-// ⚠️ PENTING: Ganti URL di bawah dengan URL Apps Script Anda
-// Cara mendapatkannya: Buka Google Sheet → Extensions → Apps Script → Deploy → New deployment → Web app
+// ⚠️ Ganti dengan URL Apps Script Anda (harus berakhiran /exec)
 const SCRIPT_URL = 'https://script.google.com/a/macros/guru.sd.belajar.id/s/AKfycbyC6MwzG1kjz235hJQrHIhcp0B0BHdDIHcutImgZgE/exec';
 
-// Kode cadangan jika Google Sheet offline/error
 const FALLBACK_CODES = ['DEWASA10', 'ANAK5', 'PELAJAR7', 'WNA25', 'MEMBERVIP'];
 let VALID_CODES = [];
 
 // ============================================================
-// FUNGSI: LOG STATISTIK AKSES KE GOOGLE SHEETS
+// FUNGSI: LOG STATISTIK
 // ============================================================
 async function logAccess(code, kategori, durasi) {
-    // Jika SCRIPT_URL belum di-set, skip logging
-    if (SCRIPT_URL.includes('GANTI_DENGAN_URL_APPS_SCRIPT_ANDA')) {
-        console.warn("⚠️ Logging dinonaktifkan. Setup Apps Script terlebih dahulu.");
-        return;
-    }
-    
     try {
         const data = {
             timestamp: new Date().toISOString(),
@@ -53,7 +39,17 @@ async function logAccess(code, kategori, durasi) {
 }
 
 // ============================================================
-// FUNGSI: AMBIL DAFTAR KODE DARI GOOGLE SHEET
+// FUNGSI: Deteksi Header (Konsisten dengan admin.js)
+// ============================================================
+function isHeaderRow(cells) {
+    if (!cells || !cells[0] || !cells[0].v) return false;
+    const firstCell = cells[0].v.toString().trim().toUpperCase();
+    const headerKeywords = ['KODE', 'CODE', 'NAMA', 'NO', 'NO.', 'NOMOR', 'ID', 'KEY', 'USERNAME', 'TIMESTAMP'];
+    return headerKeywords.includes(firstCell);
+}
+
+// ============================================================
+// FUNGSI: AMBIL DAFTAR KODE
 // ============================================================
 async function loadValidCodes() {
     try {
@@ -63,24 +59,29 @@ async function loadValidCodes() {
         if (!response.ok) throw new Error(`Gagal terhubung. Status: ${response.status}`);
         
         const text = await response.text();
-        // Bersihkan bungkus JSONP dari Google
         const jsonString = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
         const data = JSON.parse(jsonString);
         
         const rows = data.table.rows;
         const codes = [];
+        let startIndex = 0;
         
-        rows.forEach((row) => {
+        // Skip header jika ada
+        if (rows.length > 0 && isHeaderRow(rows[0].c)) {
+            startIndex = 1;
+            console.log("✅ Header terdeteksi, di-skip.");
+        }
+        
+        rows.forEach((row, index) => {
+            if (index < startIndex) return;
+            
             const cells = row.c;
             if (!cells) return;
             
-            // Kolom A (index 0) = Kode
             const kode = cells[0]?.v?.toString().trim().toUpperCase();
-            // Kolom F (index 5) = Status
             const status = cells[5]?.v?.toString().trim().toLowerCase();
             
-            // Abaikan header "KODE" dan hanya ambil yang statusnya "aktif"
-            if (kode && kode !== 'KODE' && (status === 'aktif' || status === undefined)) {
+            if (kode && (status === 'aktif' || status === undefined || status === '')) {
                 codes.push(kode);
             }
         });
@@ -95,22 +96,17 @@ async function loadValidCodes() {
 }
 
 // ============================================================
-// FUNGSI UTAMA: DIJALANKAN SETELAH HALAMAN SIAP
+// FUNGSI UTAMA
 // ============================================================
 document.addEventListener("DOMContentLoaded", async function() {
-    // 1. Muat kode dari Google Sheet
     VALID_CODES = await loadValidCodes();
     console.log("📋 Sistem siap. Kode yang diizinkan:", VALID_CODES);
     
-    // 2. Ambil elemen-elemen dari HTML
     const overlay = document.getElementById('paywall-overlay');
     const inputCode = document.getElementById('accessCode');
     const errorMsg = document.getElementById('error-msg');
     const accessInfo = document.getElementById('access-info');
 
-    // ========================================================
-    // FUNGSI: CEK STATUS AKSES PENGGUNA
-    // ========================================================
     function checkAccessStatus() {
         const storedData = localStorage.getItem('museum_access_data');
         if (!storedData) return { hasAccess: false };
@@ -119,13 +115,11 @@ document.addEventListener("DOMContentLoaded", async function() {
             const data = JSON.parse(storedData);
             const { code, timestamp, durasi } = data;
             
-            // Jika kode dihapus/dinonaktifkan di Sheet, akses otomatis dicabut
             if (!VALID_CODES.includes(code)) {
                 localStorage.removeItem('museum_access_data');
                 return { hasAccess: false };
             }
             
-            // Kode mengandung MEMBER atau VIP = akses permanen
             const isMember = code.includes('MEMBER') || code.includes('VIP');
             const finalDurasi = isMember ? -1 : durasi;
             
@@ -133,7 +127,6 @@ document.addEventListener("DOMContentLoaded", async function() {
                 return { hasAccess: true, label: 'Member Khusus (Bebas)', permanent: true };
             }
             
-            // Cek sisa waktu untuk akses reguler
             const elapsedMinutes = (Date.now() - timestamp) / (1000 * 60);
             const remainingMinutes = Math.ceil(finalDurasi - elapsedMinutes);
             
@@ -145,7 +138,6 @@ document.addEventListener("DOMContentLoaded", async function() {
                     permanent: false 
                 };
             } else {
-                // Waktu habis
                 localStorage.removeItem('museum_access_data');
                 return { hasAccess: false };
             }
@@ -154,17 +146,12 @@ document.addEventListener("DOMContentLoaded", async function() {
         }
     }
 
-    // ========================================================
-    // EKSEKUSI: CEK STATUS SAAT HALAMAN DIMUAT
-    // ========================================================
     const status = checkAccessStatus();
     
     if (status.hasAccess) {
-        // Pengguna sudah punya akses → sembunyikan overlay
         if (overlay) overlay.style.display = 'none';
         document.body.style.overflow = 'auto';
         
-        // Tampilkan badge akses aktif di pojok kanan atas
         if (accessInfo) {
             let infoText = `<i class="fa fa-check-circle"></i> Akses Aktif: <strong>${status.label}</strong>`;
             if (!status.permanent) {
@@ -175,47 +162,37 @@ document.addEventListener("DOMContentLoaded", async function() {
             accessInfo.style.display = 'block';
         }
     } else {
-        // Pengguna belum punya akses → tampilkan overlay
         if (overlay) overlay.style.display = 'flex';
         document.body.style.overflow = 'hidden';
         if (accessInfo) accessInfo.style.display = 'none';
     }
 
-    // ========================================================
-    // FUNGSI: SAAT TOMBOL "AKTIFKAN AKSES" DIKLIK
-    // ========================================================
     window.checkAccessCode = function() {
         const code = inputCode.value.trim().toUpperCase();
         console.log("🔑 Mencoba memasukkan kode:", code);
 
         if (VALID_CODES.includes(code)) {
-            // Tentukan apakah Member atau Reguler
             const isMember = code.includes('MEMBER') || code.includes('VIP');
             const durasi = isMember ? -1 : 60;
             const kategori = isMember ? 'Member Khusus' : 'Reguler';
             
-            // 📊 CATAT STATISTIK AKSES
             logAccess(code, kategori, durasi);
             
-            // Simpan status akses ke localStorage
             localStorage.setItem('museum_access_data', JSON.stringify({ 
                 code, 
                 timestamp: Date.now(), 
                 durasi 
             }));
             
-            // Sembunyikan overlay
             if (overlay) overlay.style.display = 'none';
             document.body.style.overflow = 'auto';
             
-            // Tampilkan pesan sukses
             let message = `✅ Berhasil! Kode "${code}" diterima.`;
             message += isMember 
                 ? '\n\nAnda mendapatkan akses Member Khusus (Bebas tanpa batas waktu).' 
                 : '\n\nDurasi akses: 60 menit (1 Jam).';
             alert(message);
             
-            // Refresh halaman untuk menampilkan badge akses
             location.reload();
         } else {
             console.warn("❌ Kode DITOLAK. Daftar kode valid saat ini:", VALID_CODES);
@@ -224,9 +201,6 @@ document.addEventListener("DOMContentLoaded", async function() {
         }
     };
 
-    // ========================================================
-    // FUNGSI: LOGOUT / KELUAR DARI AKSES
-    // ========================================================
     window.logoutAccess = function() {
         if (confirm('Yakin ingin mengakhiri akses? Anda harus memasukkan kode lagi untuk masuk kembali.')) {
             localStorage.removeItem('museum_access_data');
