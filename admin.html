@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Museum Bahari Ende</title>
+    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Exo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/fonts/font-awesome.min.css">
+    <style>
+        body {
+            font-family: 'Exo', sans-serif;
+            background: linear-gradient(135deg, #0a192f 0%, #1a365d 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .login-card {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 15px;
+            padding: 40px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .login-card h2 {
+            color: #b8860b;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .login-card .subtitle {
+            text-align: center;
+            color: #cbd5e1;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+        .form-control {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .form-control:focus {
+            background: rgba(0,0,0,0.4);
+            border-color: #b8860b;
+            color: white;
+            box-shadow: 0 0 0 0.2rem rgba(184, 134, 11, 0.25);
+        }
+        .form-control::placeholder { color: #94a3b8; }
+        .btn-login {
+            background: #b8860b;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .btn-login:hover { background: #9a7209; color: white; }
+        .error-msg {
+            color: #ff6b6b;
+            text-align: center;
+            margin-top: 15px;
+            display: none;
+            font-size: 0.9em;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+        .back-link:hover { color: white; }
+        .logo-icon {
+            text-align: center;
+            font-size: 50px;
+            color: #b8860b;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="logo-icon"><i class="fa fa-lock"></i></div>
+        <h2>Admin Panel</h2>
+        <p class="subtitle">Museum Bahari Ende - Ngera Shells</p>
+        
+        <form id="loginForm">
+            <input type="text" id="username" class="form-control" placeholder="Username" required autocomplete="username">
+            <input type="password" id="password" class="form-control" placeholder="Password" required autocomplete="current-password">
+            <button type="submit" class="btn-login">
+                <i class="fa fa-sign-in"></i> Masuk
+            </button>
+            <p class="error-msg" id="errorMsg">
+                <i class="fa fa-exclamation-circle"></i> Username atau password salah.
+            </p>
+        </form>
+        
+        <a href="index.html" class="back-link">
+            <i class="fa fa-arrow-left"></i> Kembali ke Website
+        </a>
+    </div>
+
+    <script src="assets/js/admin.js"></script>
+</body>
+</html>
