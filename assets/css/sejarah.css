@@ -1,0 +1,215 @@
+/* Profil Card - Menyesuaikan dengan style template */
+		.profil-card { 
+			background: #fff; 
+			border-radius: 8px; 
+			box-shadow: 0 2px 10px rgba(0,0,0,0.08); 
+			padding: 30px; 
+			margin-bottom: 30px; 
+			display: flex; 
+			gap: 30px; 
+			align-items: center; 
+			border: 1px solid #eee;
+			transition: all 0.3s ease;
+		}
+		.profil-card:hover { box-shadow: 0 5px 20px rgba(0,0,0,0.12); transform: translateY(-3px); }
+		.profil-card-reverse { flex-direction: row-reverse; }
+		.profil-photo { flex-shrink: 0; text-align: center; }
+		.profil-photo-wrapper img { 
+			width: 160px; 
+			height: 160px; 
+			border-radius: 50%; 
+			object-fit: cover; 
+			border: 4px solid #f0f5fa; 
+		}
+		.profil-badge { 
+			background: #0056b3; 
+			color: white; 
+			padding: 5px 15px; 
+			border-radius: 20px; 
+			font-size: 0.85rem; 
+			margin-top: 10px; 
+			display: inline-block; 
+		}
+		.profil-info h3 { margin-bottom: 8px; color: #222; font-family: 'Exo', sans-serif; }
+		.profil-jabatan { color: #0056b3; font-weight: 600; margin-bottom: 15px; }
+		.profil-meta { 
+			display: flex; 
+			gap: 15px; 
+			flex-wrap: wrap; 
+			margin-bottom: 15px; 
+			font-size: 0.9rem; 
+			color: #666; 
+		}
+		.profil-meta span i { color: #0056b3; margin-right: 5px; }
+		.profil-biodata { line-height: 1.8; color: #555; text-align: justify; }
+
+		/* Sejarah Section - Menyesuaikan dengan section-title template */
+		.sejarah-section { margin-bottom: 60px; }
+		.sejarah-section-header { 
+			display: flex; 
+			align-items: center; 
+			gap: 15px; 
+			margin-bottom: 25px; 
+			border-bottom: 2px solid #f0f5fa; 
+			padding-bottom: 15px; 
+		}
+		.sejarah-section-icon { 
+			width: 50px; 
+			height: 50px; 
+			background: linear-gradient(135deg, #0056b3, #007bff); 
+			color: white; 
+			border-radius: 50%; 
+			display: flex; 
+			align-items: center; 
+			justify-content: center; 
+			font-size: 1.3rem; 
+		}
+		.sejarah-section-title { 
+			margin: 0; 
+			font-size: 1.5rem; 
+			color: #222; 
+			font-weight: 600; 
+			font-family: 'Exo', sans-serif;
+		}
+		
+		/* Timeline */
+		.timeline-detail-item { 
+			border-left: 3px solid #0056b3; 
+			padding-left: 25px; 
+			margin-bottom: 30px; 
+			position: relative; 
+		}
+		.timeline-detail-item::before { 
+			content: ''; 
+			position: absolute; 
+			left: -9px; 
+			top: 0; 
+			width: 15px; 
+			height: 15px; 
+			background: #0056b3; 
+			border-radius: 50%; 
+			border: 3px solid #fff; 
+			box-shadow: 0 0 0 2px #0056b3; 
+		}
+		.timeline-detail-year { 
+			font-weight: 700; 
+			color: #0056b3; 
+			font-size: 1.15rem; 
+			margin-bottom: 8px; 
+			font-family: 'Exo', sans-serif;
+		}
+		.timeline-detail-content h4 { 
+			font-size: 1.1rem; 
+			font-weight: 600; 
+			margin-bottom: 10px; 
+			color: #333; 
+		}
+		.timeline-detail-content h4 i { color: #0056b3; margin-right: 8px; }
+		.timeline-detail-content p { color: #555; line-height: 1.8; }
+
+		/* Quote Section - Menyesuaikan dengan style testimonial template */
+		.quote-section { 
+			background: #f8f9fa; 
+			padding: 40px 30px; 
+			border-left: 5px solid #0056b3; 
+			border-radius: 0 8px 8px 0; 
+			margin-top: 40px; 
+			text-align: center; 
+		}
+		.quote-text { 
+			font-size: 1.2rem; 
+			font-style: italic; 
+			color: #333; 
+			margin-bottom: 15px; 
+			line-height: 1.7; 
+		}
+		.quote-author { 
+			font-weight: 700; 
+			color: #0056b3; 
+			font-family: 'Exo', sans-serif;
+		}
+
+		/* Info Box */
+		.info-box {
+			background: #fff;
+			padding: 25px;
+			border-radius: 8px;
+			box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+			height: 100%;
+			border: 1px solid #eee;
+		}
+		.info-box-umum { border-top: 4px solid #1565c0; }
+		.info-box-khusus { border-top: 4px solid #e65100; }
+		.info-box .badge-label {
+			display: inline-block;
+			padding: 4px 12px;
+			border-radius: 4px;
+			font-size: 0.8rem;
+			font-weight: bold;
+			color: white;
+			margin-bottom: 15px;
+		}
+		.info-box p { line-height: 1.8; color: #555; margin-bottom: 10px; }
+
+		/* Biota Grid */
+		.biota-card {
+			background: #fff;
+			padding: 25px 20px;
+			border-radius: 8px;
+			text-align: center;
+			border: 1px solid #eee;
+			transition: all 0.3s ease;
+			height: 100%;
+		}
+		.biota-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+		.biota-card i { font-size: 2.5rem; color: #0056b3; margin-bottom: 15px; }
+		.biota-card h4 { font-size: 1.1rem; margin-bottom: 10px; color: #222; font-family: 'Exo', sans-serif; }
+		.biota-card p { font-size: 0.9rem; color: #666; line-height: 1.6; }
+		.biota-card-highlight { background: #fff3e0; border: 1px solid #ffe0b2; }
+		.biota-card-highlight i { color: #e65100; }
+
+		/* Dokumentasi */
+		.dokumentasi-card {
+			background: #fff;
+			padding: 20px;
+			border-radius: 8px;
+			box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+			text-align: center;
+			border: 1px solid #eee;
+			height: 100%;
+		}
+		.dokumentasi-card i.dok-icon { font-size: 2.5rem; color: #0056b3; margin-bottom: 15px; }
+		.dokumentasi-card h4 { font-size: 1.1rem; margin-bottom: 10px; color: #222; }
+		.dokumentasi-card img { max-width: 100%; height: auto; border-radius: 6px; margin-top: 15px; border: 1px solid #eee; }
+
+		/* Milestone Box */
+		.milestone-box {
+			background: #e3f2fd;
+			padding: 20px;
+			border-radius: 8px;
+			text-align: center;
+			border: 1px solid #bbdefb;
+			margin: 15px 0;
+		}
+		.milestone-box .date-day { font-size: 2rem; font-weight: bold; color: #0056b3; }
+		.milestone-box .date-month { font-weight: 600; color: #333; }
+		.milestone-box .date-desc { font-size: 0.9rem; color: #666; margin-top: 5px; }
+
+		/* SK Item */
+		.sk-item {
+			background: #fff;
+			padding: 15px 20px;
+			border-radius: 8px;
+			border-left: 4px solid #0056b3;
+			margin-bottom: 10px;
+			box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+		}
+		.sk-item strong { color: #222; display: block; margin-bottom: 5px; }
+		.sk-item code { background: #f0f0f0; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem; color: #333; }
+		.sk-item-main { background: #e3f2fd; border-left-color: #1565c0; }
+
+		@media (max-width: 768px) {
+			.profil-card, .profil-card-reverse { flex-direction: column; text-align: center; }
+			.profil-meta { justify-content: center; }
+			.profil-photo-wrapper img { width: 130px; height: 130px; }
+		}
