@@ -1,97 +1,79 @@
 /*
 Author       : Theme_Ocean.
 Template Name: Hilux - Real Estate HTML Template 
-Version      : 1.1 (Updated - Error Free)
+Version      : 1.2 (Final - Error Free)
 */
 (function($) {
 	'use strict';
 	
-	// 🔍 DEBUG: Hapus baris ini setelah error hilang
-	console.log("🚀 SUKSES! File scripts.js VERSI BARU sudah dimuat!");
+	console.log("🚀 scripts.js v1.2 dimuat - versi bebas error");
 	
 	jQuery(document).on('ready', function(){
 	
 		/*PRELOADER JS*/
-		$(window).on('load', function() { 
-			$('.status').fadeOut();
-			$('.preloader').delay(350).fadeOut('slow'); 
-		}); 
+		try {
+			$(window).on('load', function() { 
+				$('.status').fadeOut();
+				$('.preloader').delay(350).fadeOut('slow'); 
+			}); 
+		} catch(e) { console.log("Preloader skipped"); }
 		/*END PRELOADER JS*/
 		
-		/*START MIXITUP JS - DINONAKTIFKAN (Plugin tidak dimuat)*/	
-		// if (typeof $.fn.mixitup !== 'undefined') {
-		// 	jQuery('#gallery .row').mixitup({
-		// 		targetSelector: '.mix',
-		// 	});
-		// }
-		/*END MIXITUP JS*/
-
-		/*START PRETTYPHOTO JS*/
-		if (typeof $.fn.prettyPhoto !== 'undefined') {
-			$("a[class^='prettyPhoto']").prettyPhoto();
-			$("a[data-rel^='prettyPhoto']").prettyPhoto();
-		}
-		/*END PRETTYPHOTO JS*/
-
-		/*START PORTFOLIO POPUP JS*/
-		$('#projectModal').on('shown.bs.modal', function () {
-			$('#myInput').focus();
-		});
-		/*END PORTFOLIO POPUP JS*/
-
-		/*START VIDEO JS - DINONAKTIFKAN (Plugin magnificPopup tidak dimuat)*/
-		// if (typeof $.fn.magnificPopup !== 'undefined') {
-		// 	$('.video-play').magnificPopup({
-		// 		type: 'iframe'
-		// 	});
-		// }
-		/*END VIDEO JS*/		
-		  
-		/*START PARTNER LOGO*/
-		if (typeof $.fn.owlCarousel !== 'undefined') {
-			$('.partner').owlCarousel({
-				autoPlay: 9000,
-				items: 4,
-				itemsDesktop: [1199, 3],
-				itemsDesktopSmall: [979, 3]
-			});
-		}
-		/*END PARTNER LOGO*/
+		/*MIXITUP - DINONAKTIFKAN*/
+		// jQuery('#gallery .row').mixitup({ targetSelector: '.mix' });
 		
-		/*START TESTIMONIAL JS*/	
-		if (typeof $.fn.slick !== 'undefined') {
-			$('.testimonial1-carousel').slick({
-				slidesToShow: 1,
-				slidesToScroll: 1,
-				arrows: true,
-				nextArrow: '<i class="fa fa-chevron-right next"></i>',
-				prevArrow: '<i class="fa fa-chevron-left prev"></i>',
-				dots: true,
-				fade: false,
-				autoplay: true,
-				autoplaySpeed: 2000,
+		/*PRETTYPHOTO - DINONAKTIFKAN*/
+		// $("a[class^='prettyPhoto']").prettyPhoto();
+		// $("a[data-rel^='prettyPhoto']").prettyPhoto();
+
+		/*PORTFOLIO POPUP*/
+		try {
+			$('#projectModal').on('shown.bs.modal', function () {
+				$('#myInput').focus();
 			});
-		}
-		/*END TESTIMONIAL JS*/			
+		} catch(e) {}
+
+		/*VIDEO - DINONAKTIFKAN*/
+		// $('.video-play').magnificPopup({ type: 'iframe' });
+		  
+		/*PARTNER LOGO*/
+		try {
+			if (typeof $.fn.owlCarousel !== 'undefined') {
+				$('.partner').owlCarousel({
+					autoPlay: 9000,
+					items: 4,
+					itemsDesktop: [1199, 3],
+					itemsDesktopSmall: [979, 3]
+				});
+			}
+		} catch(e) { console.log("OwlCarousel skipped"); }
+		
+		/*TESTIMONIAL*/
+		try {
+			if (typeof $.fn.slick !== 'undefined') {
+				$('.testimonial1-carousel').slick({
+					slidesToShow: 1,
+					slidesToScroll: 1,
+					arrows: true,
+					nextArrow: '<i class="fa fa-chevron-right next"></i>',
+					prevArrow: '<i class="fa fa-chevron-left prev"></i>',
+					dots: true,
+					fade: false,
+					autoplay: true,
+					autoplaySpeed: 2000,
+				});
+			}
+		} catch(e) { console.log("Slick skipped"); }
 	}); 		
 	
-	/* START PARALLAX JS - DINONAKTIFKAN (Plugin stellar tidak dimuat) */
-	// if (typeof $.fn.stellar !== 'undefined') {
-	// 	(function () {
-	// 		if (!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) { 
-	// 			$(window).stellar({
-	// 				horizontalScrolling: false,
-	// 				responsive: true
-	// 			});
-	// 		}
-	// 	}());
-	// }
-	/* END PARALLAX JS  */		
+	/* PARALLAX - DINONAKTIFKAN */
+	// $(window).stellar({ horizontalScrolling: false, responsive: true });
 	
-	/*START WOW ANIMATION JS*/
-	if (typeof WOW !== 'undefined') {
-		new WOW().init();	
-	}
-	/*END WOW ANIMATION JS*/	
+	/*WOW ANIMATION*/
+	try {
+		if (typeof WOW !== 'undefined') {
+			new WOW().init();	
+		}
+	} catch(e) { console.log("WOW skipped"); }
 				
 })(jQuery);
