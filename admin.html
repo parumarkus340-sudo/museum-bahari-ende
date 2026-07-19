@@ -4,9 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login - Museum Bahari Ende</title>
+    
+    <!-- Favicon Kerang -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐚</text></svg>">
+    
     <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Exo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/fonts/font-awesome.min.css">
+    
     <style>
         body {
             font-family: 'Exo', sans-serif;
@@ -16,6 +21,7 @@
             align-items: center;
             justify-content: center;
             color: white;
+            margin: 0;
         }
         .login-card {
             background: rgba(255,255,255,0.08);
@@ -24,7 +30,7 @@
             border-radius: 15px;
             padding: 40px;
             max-width: 420px;
-            width: 100%;
+            width: 90%;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
         .login-card h2 {
@@ -62,6 +68,7 @@
             border-radius: 8px;
             font-weight: bold;
             transition: 0.3s;
+            cursor: pointer;
         }
         .btn-login:hover { background: #9a7209; color: white; }
         .error-msg {
@@ -110,6 +117,7 @@
         </a>
     </div>
 
-    <script src="assets/js/admin.js"></script>
+    <!-- Cache buster ?v=3 untuk memastikan file terbaru dimuat -->
+    <script src="assets/js/admin.js?v=3"></script>
 </body>
 </html>
