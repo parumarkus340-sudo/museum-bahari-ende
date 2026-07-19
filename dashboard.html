@@ -4,242 +4,40 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Admin - Museum Bahari Ende</title>
-    
-    <!-- Favicon Kerang -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐚</text></svg>">
-    
     <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Exo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/fonts/font-awesome.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         * { box-sizing: border-box; }
-        body {
-            font-family: 'Exo', sans-serif;
-            background: #f5f7fa;
-            color: #2c3e50;
-            margin: 0;
-        }
-        .topbar {
-            background: linear-gradient(135deg, #0a192f 0%, #1a365d 100%);
-            color: white;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .topbar h3 { margin: 0; color: #b8860b; }
-        .topbar .user-info { font-size: 0.9em; }
-        .btn-logout {
-            background: rgba(255,255,255,0.15);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.3);
-            padding: 6px 15px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-size: 0.85em;
-            margin-left: 15px;
-            cursor: pointer;
-        }
+        body { font-family: 'Exo', sans-serif; background: #f5f7fa; color: #2c3e50; margin: 0; }
+        .topbar { background: linear-gradient(135deg, #0a192f 0%, #1a365d 100%); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); flex-wrap: wrap; gap: 10px; }
+        .topbar h3 { margin: 0; color: #b8860b; font-size: 1.3em; }
+        .btn-logout { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 6px 15px; border-radius: 50px; text-decoration: none; font-size: 0.85em; cursor: pointer; }
         .btn-logout:hover { background: rgba(255,255,255,0.25); color: white; }
-        
         .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            border-left: 4px solid #b8860b;
-        }
-        .stat-card .label {
-            color: #6c757d;
-            font-size: 0.85em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-        }
-        .stat-card .value {
-            font-size: 2.2em;
-            font-weight: 700;
-            color: #2c3e50;
-        }
-        .stat-card .icon {
-            float: right;
-            font-size: 2.5em;
-            color: #b8860b;
-            opacity: 0.3;
-        }
-        
-        .panel {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        .panel h4 {
-            color: #0a192f;
-            margin-top: 0;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f0f0f0;
-        }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-left: 4px solid #b8860b; text-align: center; }
+        .stat-card .label { color: #6c757d; font-size: 0.85em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .stat-card .value { font-size: 2em; font-weight: 700; color: #2c3e50; }
+        .panel { background: white; border-radius: 12px; padding: 25px; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .panel h4 { color: #0a192f; margin-top: 0; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0; }
         .panel h4 i { color: #b8860b; margin-right: 10px; }
-        
-        table { width: 100%; border-collapse: collapse; }
-        th {
-            background: #f8f9fa;
-            padding: 12px;
-            text-align: left;
-            font-weight: 600;
-            color: #495057;
-            border-bottom: 2px solid #dee2e6;
-        }
-        td {
-            padding: 12px;
-            border-bottom: 1px solid #f0f0f0;
-            font-size: 0.9em;
-        }
-        tr:hover { background: #f8f9fa; }
-        
-        .badge-aktif {
-            background: #10b981;
-            color: white;
-            padding: 3px 10px;
-            border-radius: 50px;
-            font-size: 0.8em;
-        }
-        .badge-nonaktif {
-            background: #ef4444;
-            color: white;
-            padding: 3px 10px;
-            border-radius: 50px;
-            font-size: 0.8em;
-        }
-        .badge-member {
-            background: #b8860b;
-            color: white;
-            padding: 3px 10px;
-            border-radius: 50px;
-            font-size: 0.8em;
-        }
-        
-        .btn-action {
-            padding: 5px 12px;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
-            font-size: 0.85em;
-            margin-right: 5px;
-        }
-        .btn-toggle { background: #ffc107; color: #000; }
-        .btn-delete { background: #ef4444; color: white; }
-        
-        .form-add {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr auto;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .form-add input, .form-add select {
-            padding: 10px;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            font-size: 0.9em;
-        }
-        .btn-add {
-            background: #b8860b;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .btn-add:hover { background: #9a7209; }
-        
-        .chart-container {
-            display: flex;
-            align-items: flex-end;
-            gap: 8px;
-            height: 200px;
-            padding: 20px 0;
-            border-bottom: 2px solid #e0e0e0;
-        }
-        .chart-bar {
-            flex: 1;
-            background: linear-gradient(to top, #b8860b, #fbbf24);
-            border-radius: 6px 6px 0 0;
-            min-height: 10px;
-            position: relative;
-            transition: 0.3s;
-            cursor: pointer;
-        }
-        .chart-bar:hover { opacity: 0.8; }
-        .chart-bar .bar-label {
-            position: absolute;
-            bottom: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.75em;
-            color: #6c757d;
-            white-space: nowrap;
-        }
-        .chart-bar .bar-value {
-            position: absolute;
-            top: -22px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.8em;
-            font-weight: bold;
-            color: #2c3e50;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #6c757d;
-        }
+        .chart-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; margin-bottom: 25px; }
+        .chart-container { position: relative; height: 300px; width: 100%; }
+        .loading { text-align: center; padding: 40px; color: #6c757d; }
         .loading i { font-size: 2em; color: #b8860b; margin-bottom: 15px; }
-        
-        .btn-refresh {
-            background: #3b82f6;
-            color: white;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9em;
-            margin-left: 15px;
-        }
-        .btn-refresh:hover { background: #2563eb; }
-        
-        @media (max-width: 768px) {
-            .form-add { grid-template-columns: 1fr; }
-            .topbar { flex-direction: column; text-align: center; }
-            .btn-logout { margin-left: 0; margin-top: 10px; }
-        }
+        @media (max-width: 768px) { .chart-grid { grid-template-columns: 1fr; } .topbar { flex-direction: column; text-align: center; } }
     </style>
 </head>
 <body>
     <div class="topbar">
-        <h3>
-            <i class="fa fa-shield"></i> Dashboard Admin
-            <button class="btn-refresh" onclick="refreshDashboard()">
-                <i class="fa fa-refresh"></i> Refresh
-            </button>
-        </h3>
-        <div class="user-info">
-            <i class="fa fa-user-circle"></i> <span id="adminName">Admin</span>
+        <h3><i class="fa fa-shield"></i> Dashboard Admin Museum Bahari</h3>
+        <div>
+            <span style="margin-right: 15px;"><i class="fa fa-user-circle"></i> <span id="adminName">Admin</span></span>
             <a href="#" class="btn-logout" onclick="logout()"><i class="fa fa-sign-out"></i> Keluar</a>
         </div>
     </div>
@@ -248,67 +46,41 @@
         <!-- STATISTIK CARDS -->
         <div class="stats-grid">
             <div class="stat-card">
-                <i class="fa fa-calendar icon"></i>
                 <div class="label">Akses Hari Ini</div>
-                <div class="value" id="statToday">-</div>
+                <div class="value" id="statToday">0</div>
             </div>
             <div class="stat-card">
-                <i class="fa fa-calendar-week icon"></i>
                 <div class="label">Akses Minggu Ini</div>
-                <div class="value" id="statWeek">-</div>
+                <div class="value" id="statWeek">0</div>
             </div>
             <div class="stat-card">
-                <i class="fa fa-calendar-alt icon"></i>
                 <div class="label">Akses Bulan Ini</div>
-                <div class="value" id="statMonth">-</div>
+                <div class="value" id="statMonth">0</div>
             </div>
             <div class="stat-card">
-                <i class="fa fa-database icon"></i>
-                <div class="label">Total Kode Aktif</div>
-                <div class="value" id="statCodes">-</div>
+                <div class="label">Total Semua Akses</div>
+                <div class="value" id="statTotal">0</div>
             </div>
         </div>
 
-        <!-- GRAFIK 7 HARI TERAKHIR -->
-        <div class="panel">
-            <h4><i class="fa fa-chart-bar"></i> Statistik 7 Hari Terakhir</h4>
-            <div class="chart-container" id="chartContainer">
-                <div class="loading"><i class="fa fa-spinner fa-spin"></i><br>Memuat data...</div>
+        <!-- GRAFIK SECTION -->
+        <div class="chart-grid">
+            <div class="panel">
+                <h4><i class="fa fa-line-chart"></i> Tren Kunjungan (7 Hari Terakhir)</h4>
+                <div class="chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
             </div>
-        </div>
-
-        <!-- KELOLA KODE AKSES -->
-        <div class="panel">
-            <h4><i class="fa fa-key"></i> Kelola Kode Akses</h4>
-            
-            <div class="form-add">
-                <input type="text" id="newCode" placeholder="Kode baru (contoh: PROMO2026)">
-                <input type="number" id="newDurasi" placeholder="Durasi (mnt)" value="60">
-                <select id="newKategori">
-                    <option value="Dewasa">Dewasa</option>
-                    <option value="Anak-anak">Anak-anak</option>
-                    <option value="Pelajar">Pelajar</option>
-                    <option value="Wisatawan Asing">WNA</option>
-                    <option value="Member Khusus">Member Khusus</option>
-                </select>
-                <button class="btn-add" onclick="addCode()"><i class="fa fa-plus"></i> Tambah</button>
-            </div>
-
-            <div id="codesTable">
-                <div class="loading"><i class="fa fa-spinner fa-spin"></i><br>Memuat daftar kode...</div>
-            </div>
-        </div>
-
-        <!-- LOG AKSES TERAKHIR -->
-        <div class="panel">
-            <h4><i class="fa fa-history"></i> Log Akses Terakhir (20 Terbaru)</h4>
-            <div id="logTable">
-                <div class="loading"><i class="fa fa-spinner fa-spin"></i><br>Memuat log...</div>
+            <div class="panel">
+                <h4><i class="fa fa-pie-chart"></i> Distribusi Kategori</h4>
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Cache buster ?v=3 untuk memastikan file terbaru dimuat -->
-    <script src="assets/js/admin.js?v=3"></script>
+    <!-- Script Admin dengan Cache Buster -->
+    <script src="assets/js/admin.js?v=4"></script>
 </body>
 </html>
