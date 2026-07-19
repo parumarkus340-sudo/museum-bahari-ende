@@ -1,12 +1,10 @@
 // ============================================================
-// MUSEUM BAHARI ENDE - Dashboard Admin (VERSI LENGKAP v6)
+// MUSEUM BAHARI ENDE - Dashboard Admin (VERSI FIX v7)
 // ============================================================
 
-// 1. KONFIGURASI GOOGLE SHEET (untuk login)
 const SHEET_ID = '14Yjote6VXC0LB65Sd_ZcgXdUE0kVexQFNhO_lbGhYVs';
 const SHEET_ADMIN = 'Admin';
 
-// 2. KONFIGURASI FIREBASE (untuk data statistik)
 const firebaseConfig = {
   apiKey: "AIzaSyC7hlKKSsqxO9pBMKU_vvRPo6uDbfMYX8g",
   authDomain: "website-museum.firebaseapp.com",
@@ -106,19 +104,38 @@ if (document.getElementById('statToday')) {
 async function loadDashboardData() {
     console.log("📊 Memuat data dari Firebase Firestore...");
     try {
-        const snapshot = await db.collection("log_akses").orderBy("waktu", "desc").get();
+        // PERBAIKAN: Ambil SEMUA data tanpa orderBy (lebih reliable)
+        // orderBy butuh index composite yang mungkin belum dibuat
+        const snapshot = await db.collection("log_akses").get();
         
         const logs = [];
         snapshot.forEach(doc => {
             logs.push({ id: doc.id, ...doc.data() });
         });
 
+        // Sort manual di JavaScript (lebih aman)
+        logs.sort((a, b) => {
+            const dateA = a.waktu?.toDate ? a.waktu.toDate() : new Date(a.waktu);
+            const dateB = b.waktu?.toDate ? b.waktu.toDate() : new Date(b.waktu);
+            return dateB - dateA; // Descending (terbaru dulu)
+        });
+
         console.log(`✅ Berhasil memuat ${logs.length} data log.`);
+        
+        // DEBUG: Tampilkan semua data untuk verifikasi
+        console.log("📋 Detail data:", logs.map(l => ({
+            kode: l.kode,
+            kategori: l.kategori,
+            waktu: l.waktu?.toDate ? l.waktu.toDate().toISOString() : l.waktu,
+            device: l.device
+        })));
+        
         processAndRenderAll(logs);
         
         document.getElementById('lastUpdate').textContent = new Date().toLocaleString('id-ID');
     } catch (error) {
         console.error("❌ Gagal memuat data:", error);
+        alert("Error memuat data: " + error.message);
     }
 }
 
@@ -139,63 +156,61 @@ function processAndRenderAll(logs) {
     const codeFrequency = {};
     const deviceCounts = {};
     
-    // Inisialisasi 7 hari terakhir
     for (let i = 6; i >= 0; i--) {
         const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
         const dateKey = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
         last7Days[dateKey] = 0;
     }
 
-    // Proses setiap log
     logs.forEach(log => {
         let logDate;
-        if (log.waktu && log.waktu.toDate) {
-            logDate = log.waktu.toDate();
-        } else {
-            logDate = new Date(log.waktu);
+        try {
+            if (log.waktu && log.waktu.toDate) {
+                logDate = log.waktu.toDate();
+            } else if (log.waktu) {
+                logDate = new Date(log.waktu);
+            } else {
+                return; // Skip data tanpa waktu
+            }
+        } catch (e) {
+            console.warn("⚠️ Invalid date:", log.waktu);
+            return;
         }
+        
         if (isNaN(logDate.getTime())) return;
 
-        // Statistik waktu
         if (logDate.toDateString() === todayStr) todayCount++;
         if (logDate >= weekAgo) weekCount++;
         if (logDate >= monthAgo) monthCount++;
 
-        // Kategori
         const kat = log.kategori || 'Lainnya';
         if (categoryCounts[kat] !== undefined) categoryCounts[kat]++;
         else categoryCounts['Lainnya']++;
 
-        // Per hari (7 hari)
         const dayKey = logDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
         if (last7Days.hasOwnProperty(dayKey)) last7Days[dayKey]++;
 
-        // Per jam (24 jam)
         hourlyCounts[logDate.getHours()]++;
 
-        // Frekuensi kode
         const kode = log.kode || 'Unknown';
         codeFrequency[kode] = (codeFrequency[kode] || 0) + 1;
 
-        // Device
         const device = log.device || 'Unknown';
         const deviceShort = getDeviceName(device);
         deviceCounts[deviceShort] = (deviceCounts[deviceShort] || 0) + 1;
     });
 
-    // Hitung rata-rata per hari (30 hari terakhir)
-    const avgPerDay = logs.length > 0 ? (logs.filter(l => {
+    const monthLogs = logs.filter(l => {
         let d = l.waktu?.toDate ? l.waktu.toDate() : new Date(l.waktu);
-        return d >= monthAgo;
-    }).length / 30).toFixed(1) : 0;
+        return d >= monthAgo && !isNaN(d.getTime());
+    });
+    const avgPerDay = monthLogs.length > 0 ? (monthLogs.length / 30).toFixed(1) : 0;
 
-    // Jam tersibuk
     const peakHour = hourlyCounts.indexOf(Math.max(...hourlyCounts));
     const peakHourStr = Math.max(...hourlyCounts) > 0 
-        ? `${peakHour.toString().padStart(2, '0')}:00 - ${peakHour.toString().padStart(2, '0')}:59`
+        ? `${peakHour.toString().padStart(2, '0')}:00`
         : '-';
 
-    // Update kartu statistik
     document.getElementById('statToday').textContent = todayCount;
     document.getElementById('statWeek').textContent = weekCount;
     document.getElementById('statMonth').textContent = monthCount;
@@ -204,7 +219,6 @@ function processAndRenderAll(logs) {
     document.getElementById('statPeak').textContent = peakHourStr;
     document.getElementById('peakBadge').textContent = `${Math.max(...hourlyCounts)} akses`;
 
-    // Render semua visualisasi
     renderTrendChart(last7Days);
     renderCategoryChart(categoryCounts);
     renderHourlyChart(hourlyCounts);
@@ -213,11 +227,8 @@ function processAndRenderAll(logs) {
     renderLogTable(logs.slice(0, 20));
 }
 
-// ============================================================
-// HELPER: Nama Device yang Ramah
-// ============================================================
 function getDeviceName(ua) {
-    if (!ua) return 'Unknown';
+    if (!ua) return '💻 Unknown';
     if (/iPhone/i.test(ua)) return '📱 iPhone';
     if (/iPad/i.test(ua)) return '📱 iPad';
     if (/Android.*Mobile/i.test(ua)) return '📱 Android';
@@ -239,9 +250,6 @@ function getBadgeClass(kategori) {
     return map[kategori] || 'badge-lainnya';
 }
 
-// ============================================================
-// GRAFIK 1: TREN 7 HARI (Line Chart)
-// ============================================================
 let trendChartInstance = null;
 function renderTrendChart(dataObj) {
     const ctx = document.getElementById('trendChart').getContext('2d');
@@ -285,12 +293,7 @@ function renderTrendChart(dataObj) {
             maintainAspectRatio: false,
             plugins: { 
                 legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#0a192f',
-                    padding: 12,
-                    titleFont: { size: 14 },
-                    bodyFont: { size: 13 }
-                }
+                tooltip: { backgroundColor: '#0a192f', padding: 12 }
             },
             scales: {
                 y: { beginAtZero: true, ticks: { stepSize: 1 } },
@@ -300,9 +303,6 @@ function renderTrendChart(dataObj) {
     });
 }
 
-// ============================================================
-// GRAFIK 2: KATEGORI (Doughnut Chart)
-// ============================================================
 let categoryChartInstance = null;
 function renderCategoryChart(dataObj) {
     const ctx = document.getElementById('categoryChart').getContext('2d');
@@ -333,9 +333,6 @@ function renderCategoryChart(dataObj) {
     });
 }
 
-// ============================================================
-// GRAFIK 3: JAM TERSIBUK (Bar Chart)
-// ============================================================
 let hourlyChartInstance = null;
 function renderHourlyChart(hourlyCounts) {
     const ctx = document.getElementById('hourlyChart').getContext('2d');
@@ -373,14 +370,9 @@ function renderHourlyChart(hourlyCounts) {
     });
 }
 
-// ============================================================
-// TOP 5 KODE TERPOPULER
-// ============================================================
 function renderTopCodes(codeFreq) {
     const container = document.getElementById('topCodesList');
-    const sorted = Object.entries(codeFreq)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5);
+    const sorted = Object.entries(codeFreq).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
     if (sorted.length === 0) {
         container.innerHTML = '<p style="text-align: center; color: #6c757d; padding: 20px;">Belum ada data</p>';
@@ -388,7 +380,6 @@ function renderTopCodes(codeFreq) {
     }
 
     const rankClasses = ['gold', 'silver', 'bronze', '', ''];
-    
     let html = '';
     sorted.forEach(([code, count], idx) => {
         html += `
@@ -399,18 +390,12 @@ function renderTopCodes(codeFreq) {
             </div>
         `;
     });
-    
     container.innerHTML = html;
 }
 
-// ============================================================
-// LIST DEVICE
-// ============================================================
 function renderDeviceList(deviceCounts) {
     const container = document.getElementById('deviceList');
-    const sorted = Object.entries(deviceCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5);
+    const sorted = Object.entries(deviceCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
     if (sorted.length === 0) {
         container.innerHTML = '<p style="text-align: center; color: #6c757d; padding: 20px;">Belum ada data</p>';
@@ -418,7 +403,6 @@ function renderDeviceList(deviceCounts) {
     }
 
     const total = sorted.reduce((sum, [, count]) => sum + count, 0);
-    
     let html = '';
     sorted.forEach(([device, count]) => {
         const percent = ((count / total) * 100).toFixed(0);
@@ -429,13 +413,9 @@ function renderDeviceList(deviceCounts) {
             </div>
         `;
     });
-    
     container.innerHTML = html;
 }
 
-// ============================================================
-// TABEL LOG AKSES
-// ============================================================
 function renderLogTable(logs) {
     const container = document.getElementById('logTable');
     document.getElementById('logBadge').textContent = `${logs.length} data`;
@@ -461,10 +441,14 @@ function renderLogTable(logs) {
 
     logs.forEach(log => {
         let logDate;
-        if (log.waktu && log.waktu.toDate) {
-            logDate = log.waktu.toDate();
-        } else {
-            logDate = new Date(log.waktu);
+        try {
+            if (log.waktu && log.waktu.toDate) {
+                logDate = log.waktu.toDate();
+            } else {
+                logDate = new Date(log.waktu);
+            }
+        } catch (e) {
+            logDate = new Date();
         }
 
         const waktu = !isNaN(logDate.getTime())
@@ -494,9 +478,6 @@ function renderLogTable(logs) {
     container.innerHTML = html;
 }
 
-// ============================================================
-// AKSI ADMIN
-// ============================================================
 function refreshDashboard() {
     const btn = document.querySelector('.btn-refresh');
     const originalText = btn.innerHTML;
