@@ -8,84 +8,266 @@
     <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Exo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/fonts/font-awesome.min.css">
-    
-    <!-- 🔥 FIREBASE LIBRARY (WAJIB ADA SEBELUM admin.js) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    
-    <!-- 📊 CHART.JS LIBRARY -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         * { box-sizing: border-box; }
         body { font-family: 'Exo', sans-serif; background: #f5f7fa; color: #2c3e50; margin: 0; }
-        .topbar { background: linear-gradient(135deg, #0a192f 0%, #1a365d 100%); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); flex-wrap: wrap; gap: 10px; }
+        
+        .topbar {
+            background: linear-gradient(135deg, #0a192f 0%, #1a365d 100%);
+            color: white; padding: 15px 30px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); flex-wrap: wrap; gap: 10px;
+        }
         .topbar h3 { margin: 0; color: #b8860b; font-size: 1.3em; }
-        .btn-logout { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 6px 15px; border-radius: 50px; text-decoration: none; font-size: 0.85em; cursor: pointer; }
-        .btn-logout:hover { background: rgba(255,255,255,0.25); color: white; }
-        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-left: 4px solid #b8860b; text-align: center; }
-        .stat-card .label { color: #6c757d; font-size: 0.85em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-        .stat-card .value { font-size: 2em; font-weight: 700; color: #2c3e50; }
-        .panel { background: white; border-radius: 12px; padding: 25px; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .panel h4 { color: #0a192f; margin-top: 0; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0; }
+        .btn-logout, .btn-refresh {
+            background: rgba(255,255,255,0.15); color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 6px 15px; border-radius: 50px;
+            text-decoration: none; font-size: 0.85em;
+            cursor: pointer; margin-left: 10px;
+            transition: 0.3s;
+        }
+        .btn-logout:hover, .btn-refresh:hover { background: rgba(255,255,255,0.25); color: white; }
+        
+        .container { max-width: 1300px; margin: 30px auto; padding: 0 20px; }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px; margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white; padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-left: 4px solid #b8860b;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .stat-card .label {
+            color: #6c757d; font-size: 0.8em;
+            text-transform: uppercase; letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .stat-card .value { font-size: 1.8em; font-weight: 700; color: #2c3e50; }
+        .stat-card .icon {
+            font-size: 2em; color: #b8860b; opacity: 0.3;
+            float: right; margin-top: -10px;
+        }
+        
+        .panel {
+            background: white; border-radius: 12px;
+            padding: 25px; margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .panel h4 {
+            color: #0a192f; margin-top: 0;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex; justify-content: space-between; align-items: center;
+        }
         .panel h4 i { color: #b8860b; margin-right: 10px; }
-        .chart-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; margin-bottom: 25px; }
+        .panel h4 .badge {
+            background: #b8860b; color: white;
+            padding: 3px 10px; border-radius: 50px;
+            font-size: 0.75em; font-weight: normal;
+        }
+        
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px; margin-bottom: 25px;
+        }
         .chart-container { position: relative; height: 300px; width: 100%; }
+        .chart-container-small { position: relative; height: 250px; width: 100%; }
+        
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th {
+            background: #f8f9fa; padding: 12px;
+            text-align: left; font-weight: 600;
+            color: #495057; border-bottom: 2px solid #dee2e6;
+            font-size: 0.85em; text-transform: uppercase;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9em;
+        }
+        tr:hover { background: #f8f9fa; }
+        
+        .badge-kat {
+            padding: 4px 10px; border-radius: 50px;
+            font-size: 0.8em; font-weight: 500;
+            display: inline-block;
+        }
+        .badge-dewasa { background: #fef3c7; color: #92400e; }
+        .badge-anak { background: #d1fae5; color: #065f46; }
+        .badge-pelajar { background: #dbeafe; color: #1e40af; }
+        .badge-reguler { background: #fee2e2; color: #991b1b; }
+        .badge-member { background: #ede9fe; color: #5b21b6; }
+        .badge-lainnya { background: #f3f4f6; color: #374151; }
+        
+        .top-code-item {
+            display: flex; justify-content: space-between;
+            align-items: center; padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .top-code-item:last-child { border-bottom: none; }
+        .top-code-item .rank {
+            background: #b8860b; color: white;
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .top-code-item .rank.gold { background: #fbbf24; }
+        .top-code-item .rank.silver { background: #9ca3af; }
+        .top-code-item .rank.bronze { background: #b45309; }
+        .top-code-item .code { font-weight: 600; flex: 1; }
+        .top-code-item .count {
+            background: #f0f9ff; color: #0369a1;
+            padding: 3px 10px; border-radius: 50px;
+            font-size: 0.85em; font-weight: 600;
+        }
+        
         .loading { text-align: center; padding: 40px; color: #6c757d; }
         .loading i { font-size: 2em; color: #b8860b; margin-bottom: 15px; }
-        @media (max-width: 768px) { .chart-grid { grid-template-columns: 1fr; } .topbar { flex-direction: column; text-align: center; } }
+        
+        .info-box {
+            background: #eff6ff; border-left: 4px solid #3b82f6;
+            padding: 15px; border-radius: 6px;
+            margin-bottom: 20px; font-size: 0.9em;
+        }
+        .info-box i { color: #3b82f6; margin-right: 8px; }
+        
+        @media (max-width: 768px) {
+            .chart-grid { grid-template-columns: 1fr; }
+            .topbar { flex-direction: column; text-align: center; }
+            .stat-card .value { font-size: 1.5em; }
+        }
     </style>
 </head>
 <body>
     <div class="topbar">
         <h3><i class="fa fa-shield"></i> Dashboard Admin Museum Bahari</h3>
         <div>
-            <span style="margin-right: 15px;"><i class="fa fa-user-circle"></i> <span id="adminName">Admin</span></span>
+            <button class="btn-refresh" onclick="refreshDashboard()">
+                <i class="fa fa-refresh"></i> Refresh
+            </button>
+            <span style="margin-left: 15px;"><i class="fa fa-user-circle"></i> <span id="adminName">Admin</span></span>
             <a href="#" class="btn-logout" onclick="logout()"><i class="fa fa-sign-out"></i> Keluar</a>
         </div>
     </div>
 
     <div class="container">
-        <!-- STATISTIK CARDS -->
+        <!-- INFO BOX -->
+        <div class="info-box">
+            <i class="fa fa-info-circle"></i>
+            <strong>Selamat datang!</strong> Data diperbarui secara real-time dari Firebase Firestore. 
+            Terakhir dimuat: <span id="lastUpdate">-</span>
+        </div>
+
+        <!-- 6 KARTU STATISTIK -->
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="label">Akses Hari Ini</div>
+                <i class="fa fa-calendar icon"></i>
+                <div class="label">Hari Ini</div>
                 <div class="value" id="statToday">0</div>
             </div>
             <div class="stat-card">
-                <div class="label">Akses Minggu Ini</div>
+                <i class="fa fa-calendar-week icon"></i>
+                <div class="label">Minggu Ini</div>
                 <div class="value" id="statWeek">0</div>
             </div>
             <div class="stat-card">
-                <div class="label">Akses Bulan Ini</div>
+                <i class="fa fa-calendar-alt icon"></i>
+                <div class="label">Bulan Ini</div>
                 <div class="value" id="statMonth">0</div>
             </div>
             <div class="stat-card">
-                <div class="label">Total Semua Akses</div>
+                <i class="fa fa-database icon"></i>
+                <div class="label">Total Akses</div>
                 <div class="value" id="statTotal">0</div>
+            </div>
+            <div class="stat-card">
+                <i class="fa fa-chart-line icon"></i>
+                <div class="label">Rata-rata/Hari</div>
+                <div class="value" id="statAvg">0</div>
+            </div>
+            <div class="stat-card">
+                <i class="fa fa-clock icon"></i>
+                <div class="label">Jam Tersibuk</div>
+                <div class="value" id="statPeak" style="font-size: 1.3em;">-</div>
             </div>
         </div>
 
-        <!-- GRAFIK SECTION -->
+        <!-- GRAFIK UTAMA -->
         <div class="chart-grid">
             <div class="panel">
-                <h4><i class="fa fa-line-chart"></i> Tren Kunjungan (7 Hari Terakhir)</h4>
+                <h4>
+                    <span><i class="fa fa-line-chart"></i> Tren Kunjungan (7 Hari)</span>
+                    <span class="badge" id="trendBadge">0 akses</span>
+                </h4>
                 <div class="chart-container">
                     <canvas id="trendChart"></canvas>
                 </div>
             </div>
             <div class="panel">
-                <h4><i class="fa fa-pie-chart"></i> Distribusi Kategori</h4>
+                <h4><i class="fa fa-pie-chart"></i> Kategori Pengunjung</h4>
                 <div class="chart-container">
                     <canvas id="categoryChart"></canvas>
                 </div>
             </div>
         </div>
+
+        <!-- GRAFIK JAM TERSIBUK -->
+        <div class="panel">
+            <h4>
+                <span><i class="fa fa-clock"></i> Distribusi Akses per Jam (24 Jam)</span>
+                <span class="badge" id="peakBadge">-</span>
+            </h4>
+            <div class="chart-container-small">
+                <canvas id="hourlyChart"></canvas>
+            </div>
+        </div>
+
+        <!-- TOP 5 KODE & DEVICE -->
+        <div class="chart-grid">
+            <div class="panel">
+                <h4><i class="fa fa-trophy"></i> Top 5 Kode Akses Terpopuler</h4>
+                <div id="topCodesList">
+                    <div class="loading"><i class="fa fa-spinner fa-spin"></i><br>Memuat...</div>
+                </div>
+            </div>
+            <div class="panel">
+                <h4><i class="fa fa-mobile"></i> Device Pengunjung</h4>
+                <div id="deviceList">
+                    <div class="loading"><i class="fa fa-spinner fa-spin"></i><br>Memuat...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LOG AKSES TERAKHIR -->
+        <div class="panel">
+            <h4>
+                <span><i class="fa fa-history"></i> Log Akses Terakhir</span>
+                <span class="badge" id="logBadge">0 data</span>
+            </h4>
+            <div class="table-responsive">
+                <div id="logTable">
+                    <div class="loading"><i class="fa fa-spinner fa-spin"></i><br>Memuat log...</div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Script Admin dengan Cache Buster -->
-    <script src="assets/js/admin.js?v=5"></script>
+    <script src="assets/js/admin.js?v=6"></script>
 </body>
 </html>
