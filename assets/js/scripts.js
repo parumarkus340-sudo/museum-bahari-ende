@@ -15,26 +15,24 @@ Version      : 1.0
 		}); 
 		/*END PRELOADER JS*/
 		
-
-
-		/*START MIXITUP JS*/	
-		jQuery('#gallery .row').mixitup({
-			targetSelector: '.mix',
-		});		
+		/*START MIXITUP JS (DINONAKTIFKAN KARENA PLUGIN TIDAK DIMUAT)*/	
+		// jQuery('#gallery .row').mixitup({
+		// 	targetSelector: '.mix',
+		// });		
 		$("a[class^='prettyPhoto']").prettyPhoto();
 		/*END MIXITUP JS*/		
 
 		/*START PORTFOLIO POPUP JS*/
-		 $("a[data-rel^='prettyPhoto']").prettyPhoto();				 
-		 $('#projectModal').on('shown.bs.modal', function () {
+		$("a[data-rel^='prettyPhoto']").prettyPhoto();				 
+		$('#projectModal').on('shown.bs.modal', function () {
 		  $('#myInput').focus()
-		 })
+		})
 		/*END PORTFOLIO POPUP JS*/
 
 		/*START VIDEO JS*/
-		$('.video-play').magnificPopup({
-            type: 'iframe'
-        });
+		// $('.video-play').magnificPopup({
+        //     type: 'iframe'
+        // });
 		/*END VIDEO JS*/		
 		  
 		/*START PARTNER LOGO*/
@@ -61,24 +59,20 @@ Version      : 1.0
 		/*END TESTIMONIAL JS*/			
 	}); 		
 	
-	/* START PARALLAX JS */
-	(function () {
-		if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) { 
-		} else {
-			$(window).stellar({
-				horizontalScrolling: false,
-				responsive: true
-			});
-		}
-	}());
+	/* START PARALLAX JS (DINONAKTIFKAN KARENA PLUGIN STELLAR TIDAK DIMUAT) */
+	// (function () {
+	// 	if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) { 
+	// 	} else {
+	// 		$(window).stellar({
+	// 			horizontalScrolling: false,
+	// 			responsive: true
+	// 		});
+	// 	}
+	// }());
 	/* END PARALLAX JS  */		
 	
 	/*START WOW ANIMATION JS*/
-	  new WOW().init();	
+	new WOW().init();	
 	/*END WOW ANIMATION JS*/	
 				
 })(jQuery);
-
-
-  
-
