@@ -4,9 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Admin - Museum Bahari Ende</title>
+    
+    <!-- Favicon Kerang -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐚</text></svg>">
+    
     <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Exo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/fonts/font-awesome.min.css">
+    
     <style>
         * { box-sizing: border-box; }
         body {
@@ -23,6 +28,8 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+            gap: 10px;
         }
         .topbar h3 { margin: 0; color: #b8860b; }
         .topbar .user-info { font-size: 0.9em; }
@@ -35,6 +42,7 @@
             text-decoration: none;
             font-size: 0.85em;
             margin-left: 15px;
+            cursor: pointer;
         }
         .btn-logout:hover { background: rgba(255,255,255,0.25); color: white; }
         
@@ -195,17 +203,6 @@
             font-weight: bold;
             color: #2c3e50;
         }
-        .chart-labels {
-            display: flex;
-            gap: 8px;
-            margin-top: 30px;
-        }
-        .chart-labels > div {
-            flex: 1;
-            text-align: center;
-            font-size: 0.8em;
-            color: #6c757d;
-        }
         
         .loading {
             text-align: center;
@@ -214,15 +211,33 @@
         }
         .loading i { font-size: 2em; color: #b8860b; margin-bottom: 15px; }
         
+        .btn-refresh {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-left: 15px;
+        }
+        .btn-refresh:hover { background: #2563eb; }
+        
         @media (max-width: 768px) {
             .form-add { grid-template-columns: 1fr; }
-            .topbar { flex-direction: column; gap: 10px; }
+            .topbar { flex-direction: column; text-align: center; }
+            .btn-logout { margin-left: 0; margin-top: 10px; }
         }
     </style>
 </head>
 <body>
     <div class="topbar">
-        <h3><i class="fa fa-shield"></i> Dashboard Admin</h3>
+        <h3>
+            <i class="fa fa-shield"></i> Dashboard Admin
+            <button class="btn-refresh" onclick="refreshDashboard()">
+                <i class="fa fa-refresh"></i> Refresh
+            </button>
+        </h3>
         <div class="user-info">
             <i class="fa fa-user-circle"></i> <span id="adminName">Admin</span>
             <a href="#" class="btn-logout" onclick="logout()"><i class="fa fa-sign-out"></i> Keluar</a>
@@ -293,6 +308,7 @@
         </div>
     </div>
 
-    <script src="assets/js/admin.js"></script>
+    <!-- Cache buster ?v=3 untuk memastikan file terbaru dimuat -->
+    <script src="assets/js/admin.js?v=3"></script>
 </body>
 </html>
